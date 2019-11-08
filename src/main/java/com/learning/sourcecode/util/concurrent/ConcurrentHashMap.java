@@ -1101,6 +1101,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                                      (ek != null && key.equals(ek)))) {
                                     oldVal = e.val;
                                     // 当使用putIfAbsent的时候，只有在这个key没有设置值时的候才设置
+                                    // 默认情况下是会对值进行覆盖的
                                     if (!onlyIfAbsent)
                                         e.val = value;
                                     break;
@@ -1130,7 +1131,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 }
                 if (binCount != 0) {
                     // 当在同一个节点的数目大于等于8时，则进行扩容或者将数据转换成红黑树
-                    // 注意，这里并不一定是直接转换成红黑树，有可能先进行扩容
+                    // 注意，这里并不一定是直接转换成红黑树，有可能先进行扩容，当数组长度小于64的时候就会进行扩容
                     if (binCount >= TREEIFY_THRESHOLD)
                         treeifyBin(tab, i);
                     if (oldVal != null)
@@ -2447,10 +2448,21 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         // 说明当前桶已经迁移完毕，可以去帮助迁移其他的桶的元素了
         if (tab != null && (f instanceof ForwardingNode) &&
             (nextTab = ((ForwardingNode<K, V>) f).nextTable) != null) {
+            // 生成扩容戳
             int rs = resizeStamp(tab.length);
             // sizeCtl<0,说明正在扩容
             while (nextTab == nextTable && table == tab &&
                    (sc = sizeCtl) < 0) {
+                /**
+                 * 说明扩容还未完成的情况下不断循环来尝试将当前
+                 * 线程加入到扩容操作中
+                 * 下面部分的整个代码表示扩容结束，直接退出循环
+                 * transferIndex<=0 表示所有的 Node 都已经分配了线程
+                 * sc=rs+MAX_RESIZERS 表示扩容线程数达到最大扩容线程数
+                 * sc >>> RESIZE_STAMP_SHIFT !=rs， 如果在同一轮扩容中，那么 sc 无符号
+                 * 右移比较高位和 rs 的值，那么应该是相等的。如果不相等，说明扩容结束了
+                 * sc==rs+1 表示扩容结束
+                 */
                 if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
                     sc == rs + MAX_RESIZERS || transferIndex <= 0)
                     break;
@@ -2472,6 +2484,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param size number of elements (doesn't need to be perfectly accurate)
      */
     private final void tryPresize(int size) {
+        // 对size进行修复，主要目的是防止传入的值不是一个 2 次幂的整数，然后通过
+        // tableSizeFor 来讲入参转化为离该整数最近的 2 次幂
         int c = (size >= (MAXIMUM_CAPACITY >>> 1)) ? MAXIMUM_CAPACITY :
                 tableSizeFor(size + (size >>> 1) + 1);
         int sc;
@@ -2499,12 +2513,13 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             else if (c <= sc || n >= MAXIMUM_CAPACITY)
                 break;
             else if (tab == table) {
+                // 这里和addCount是差不多的，做辅助扩容
                 int rs = resizeStamp(n);
                 // 如果正在扩容，则帮助扩容
                 // 否则的话，开始新的扩容
                 // 在transfer操作，将第一个参数的table元素，移到第二个元素的table去，
                 // 虽然此时第二个参数设置的是null，但是在transfer方法中，第二个参数为null的时候，会创建一个两倍大小的table
-                // sc小于0表示有线程在进行操作
+                // sc小于0表示有线程在进行扩容
                 if (sc < 0) {
                     Node<K, V>[] nt;
                     if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
@@ -2536,6 +2551,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         // 扩容后数组长度为原来的两倍
         if (nextTab == null) {            // initiating
             try {
+                // 这里新建是原来2倍的数组
                 @SuppressWarnings("unchecked")
                 Node<K, V>[] nt = (Node<K, V>[]) new Node<?, ?>[n << 1];
                 nextTab = nt;
@@ -2551,18 +2567,27 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         /**
          * 创建一个fwd结点，用来控制并发，当一个结点为空或者已经被转移之后，就设置为fwd结点
          * 这是一个空的标志节点
+         * 该节点的hashCode值为-1，占位符作用
          */
         ForwardingNode<K, V> fwd = new ForwardingNode<K, V>(nextTab);
         // 是否继续向前查找的标志位
         boolean advance = true;
+        // 判断扩容是否完成，完成就退出循环
         boolean finishing = false; // to ensure sweep before committing nextTab
+        // 这里又是一个自旋操作
+        // 通过cas处理transferIndex的值，并初始化bound和i，i指当前处理的槽位号，bound指需要处理的槽位边界
+        // 注意槽位是从后往前进行处理的
         for (int i = 0, bound = 0; ; ) {
+            // 通过自旋不断使用cas尝试为当前线程分配任务，直到分配成功或任务对列已经被分配完毕
+            // 然后下面的--i来控制桶的位置
             Node<K, V> f;
             int fh;
             while (advance) {
                 int nextIndex, nextBound;
+                // 如果--i大于等于bound，则表示当前线程已经分配过桶了
                 if (--i >= bound || finishing)
                     advance = false;
+                    // 表示桶已经被分配完毕，因为transferIndex的值会通过cas操作不断变化，即使在并发的情况下
                 else if ((nextIndex = transferIndex) <= 0) {
                     i = -1;
                     advance = false;
@@ -2573,11 +2598,13 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                         (this, TRANSFERINDEX, nextIndex,
                          nextBound = (nextIndex > stride ?
                                       nextIndex - stride : 0))) {
+                    // 比如之前transferIndex为32，则此时bound的值就为16，i就是31，也就是从高位桶开始向前转移
                     bound = nextBound;
                     i = nextIndex - 1;
                     advance = false;
                 }
             }
+            // i<0说明已经遍历完旧的数组，也就是当前线程处理完所负责的桶了
             if (i < 0 || i >= n || i + n >= nextn) {
                 int sc;
                 // 数据迁移完成，替换旧桶数据
@@ -2588,13 +2615,24 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     sizeCtl = (n << 1) - (n >>> 1);
                     return;
                 }
-                // 扩容完成，将扩容线程数-1
+                /*
+                 * 扩容完成，将扩容线程数-1，表示自己完成了所属的任务
+                 * 第一个线程扩容，在执行transfer之前会设置sizeCtl=(resizeStamp(n) << RESIZE_STAMP_SHIFT) + 2)
+                 * 后续帮其扩容的线程，执行 transfer 方法之前，会设置 sizeCtl = sizeCtl+1
+                 * 每一个退出 transfer 的方法的线程，退出之前，会设置 sizeCtl = sizeCtl-1
+                 * 那么最后一个线程退出时：必然有
+                 * sc == (resizeStamp(n) << RESIZE_STAMP_SHIFT) + 2)，即 (sc - 2)
+                 *  == resizeStamp(n) << RESIZE_STAMP_SHIFT
+                 * 如果 sc - 2 不等于标识符左移 16 位。如果他们相等了，说明没有线程在
+                 * 帮助他们扩容了。也就是说，扩容结束了。
+                 */
                 if (U.compareAndSwapInt(this, SIZECTL, sc = sizeCtl, sc - 1)) {
                     if ((sc - 2) != resizeStamp(n) << RESIZE_STAMP_SHIFT)
                         return;
                     // finishing和advance设置为true，重新走到上面if条件，再次检查是否迁移完
                     // 通过fh=f.hash==MOVED进行判断
                     finishing = advance = true;
+                    // 再次循环检查一下整张表
                     i = n; // recheck before commit
                 }
             }
