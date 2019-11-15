@@ -240,6 +240,15 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         private static final long serialVersionUID = -3000897897090466540L;
 
         final void lock() {
+            // 公平锁获取锁，注意和非公平锁对比，非公平锁有插队操作
+            /**
+             *  // 首先用cas操作尝试是否可以立即获取锁，其实也就是一种插队
+             *             if (compareAndSetState(0, 1))
+             *                 // 设置当前获取锁的线程
+             *                 setExclusiveOwnerThread(Thread.currentThread());
+             *             else // 如果cas失败，则表示要进行排队争抢锁
+             *                 acquire(1);
+             */
             acquire(1);
         }
 
@@ -250,6 +259,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         protected final boolean tryAcquire(int acquires) {
             final Thread current = Thread.currentThread();
             int c = getState();
+            // 这里逻辑和非公锁大致一样，只有在获取锁时，判断是否有线程节点在排队 多了一个hasQueuedPredecessors方法
             if (c == 0) {
                 if (!hasQueuedPredecessors() &&
                     compareAndSetState(0, acquires)) {
