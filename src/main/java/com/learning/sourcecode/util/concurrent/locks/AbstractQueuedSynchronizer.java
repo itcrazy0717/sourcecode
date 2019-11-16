@@ -413,7 +413,7 @@ public abstract class AbstractQueuedSynchronizer
          *               then retry the atomic acquire, and then,
          *               on failure, block.
          *               
-         *               1 在同步对列等待的线程超时或被中断，需从对列中移除该节点，进入该节点状态后节点是不会改变状态的
+         *               1 在同步队列等待的线程超时或被中断，需从队列中移除该节点，进入该节点状态后节点是不会改变状态的
          *   CANCELLED:  This node is cancelled due to timeout or interrupt.
          *               Nodes never leave this state. In particular,
          *               a thread with cancelled node never again blocks.
@@ -515,7 +515,7 @@ public abstract class AbstractQueuedSynchronizer
         Node() {    // Used to establish initial head or SHARED marker
         }
         
-        // 构造一个Node节点，添加到等待对列
+        // 构造一个Node节点，添加到等待队列
         Node(Thread thread, Node mode) {     // Used by addWaiter
             this.nextWaiter = mode;
             this.thread = thread;
@@ -1255,7 +1255,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final void acquire(int arg) {
         // 首先通过tryAcquire尝试获取锁
-        // 如果失败，再将线程增加到等待对列中
+        // 如果失败，再将线程增加到等待队列中
         if (!tryAcquire(arg) &&
             acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
             selfInterrupt();
@@ -1699,9 +1699,12 @@ public abstract class AbstractQueuedSynchronizer
      */
     final boolean isOnSyncQueue(Node node) {
         // 第一次判断一定是false，因为前面已经释放锁了
+        // 当waitStatus==CONDITION时，表示在condition队列中，还未加入到AQS的同步队列的，因为AQS队列中的waitStatus值为0或-1
+        // node.prev==null也表示不在AQS队列中，因为prev=null在AQS队列中只有一种可能就是head节点，但是前面已经释放了锁，head节点是
+        // 获得锁的节点
         if (node.waitStatus == Node.CONDITION || node.prev == null)
             return false;
-        // 如果node.next不为null，则表示一定在在链表上
+        // 如果node.next不为null，则表示一定在AQS上，因为只有同步队列才有next元素
         if (node.next != null) // If has successor, it must be on queue
             return true;
         /*
@@ -1712,7 +1715,7 @@ public abstract class AbstractQueuedSynchronizer
          * unless the CAS failed (which is unlikely), it will be
          * there, so we hardly ever traverse much.
          */
-        // 从后向前找，判断节点是否在链表上
+        // 从后向前找，判断节点是否在AQS队列上
         return findNodeFromTail(node);
     }
 
@@ -1743,7 +1746,7 @@ public abstract class AbstractQueuedSynchronizer
         /*
          * If cannot change waitStatus, the node has been cancelled.
          */
-        // cas修改节点的状态，如果成功，则将节点加入到AQS队列中
+        // cas修改节点的状态，如果不成功则返回false，如果cas失败，则只有一种可能：线程被CANCELLED了
         if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))
             return false;
 
@@ -1753,11 +1756,15 @@ public abstract class AbstractQueuedSynchronizer
          * attempt to set waitStatus fails, wake up to resync (in which
          * case the waitStatus can be transiently and harmlessly wrong).
          */
-        // 加入AQS队列，注意这里返回的是node的上一个节点
+        // 加入AQS队列，注意这里返回的是node的上一个节点，也就是原来的tail节点
         Node p = enq(node);
         int ws = p.waitStatus;
-        // 唤醒该节点，这个节点会在await中苏醒
+        // 唤醒该节点，这个节点会在await中苏醒或者在调用signal后，会释放锁，在unlock的时候又会去唤醒锁，然后在await中苏醒
         // 如果上一个节点被CANCELLED了，或者通过cas尝试修改上一个节点的状态为SIGNAL失败(SIGNAL：表示它的next节点需要停止阻塞，SIGNAL意味着需要被唤醒)
+        // cas失败表示prev节点的状态已经是SIGNAL了，则在此进行唤醒
+        // ws==0 cas时p.waitStatus=-1,表示prev已经唤醒，则cas失败，则在此进行唤醒
+        // ws==0 cas成功，则在AQS队列中唤醒
+        // 其实这里就是判断是在AQS中唤醒，还是在这里唤醒
         if (ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL))
             LockSupport.unpark(node.thread);
         return true;
@@ -1771,8 +1778,9 @@ public abstract class AbstractQueuedSynchronizer
      * @return true if cancelled before the node was signalled
      */
     final boolean transferAfterCancelledWait(Node node) {
-        // 如果被中断则会跑到该流程分钟
-        // 这里利用cas修改node的状态，并使用enq加入AQS对列中
+        // 如果被中断则会跑到该流程
+        // 这里利用cas修改node的状态，并使用enq加入AQS队列中
+        // 如果cas成功，表明线程被中断时，还未调用signal，因为如果调用了signal会修改节点的状态
         if (compareAndSetWaitStatus(node, Node.CONDITION, 0)) {
             enq(node);
             return true;
@@ -1783,7 +1791,8 @@ public abstract class AbstractQueuedSynchronizer
          * incomplete transfer is both rare and transient, so just
          * spin.
          */
-        // 如果cas失败，如果返回false，表示未在condition对列上，则让出时间片
+        // cas失败，则走到该分支
+        // 循环检测node是否在AQS对列上，如果不在则让出时间片
         while (!isOnSyncQueue(node))
             Thread.yield();
         return false;
@@ -1798,7 +1807,7 @@ public abstract class AbstractQueuedSynchronizer
     final int fullyRelease(Node node) {
         boolean failed = true;
         try {
-            // 获取state状态
+            // 获取state状态，注意这里是整个锁计数的值，然后release传入这个值，一次性减去
             int savedState = getState();
             // 释放锁，并唤醒一个线程
             if (release(savedState)) {
@@ -1923,16 +1932,19 @@ public abstract class AbstractQueuedSynchronizer
         // Internal methods
 
         /**
+         * 构建一个单向链表
          * Adds a new waiter to wait queue.
          * @return its new wait node
          */
         private Node addConditionWaiter() {
             Node t = lastWaiter;
             // If lastWaiter is cancelled, clean out.
+            // 如果t!=null并且waitStatus不等于CONDITION，则会移除该节点
             if (t != null && t.waitStatus != Node.CONDITION) {
                 unlinkCancelledWaiters();
                 t = lastWaiter;
             }
+            // 构建一个Node，waitStatus=CONDITION，这里是单向链表
             Node node = new Node(Thread.currentThread(), Node.CONDITION);
             if (t == null)
                 firstWaiter = node;
@@ -1950,6 +1962,7 @@ public abstract class AbstractQueuedSynchronizer
          */
         private void doSignal(Node first) {
             do {
+                // 这里相当于移除firstWaiter节点，继续向下移动
                 // 如果第一个节点的next节点为null，那么last节点设置为null
                 if ( (firstWaiter = first.nextWaiter) == null)
                     lastWaiter = null;
@@ -1992,7 +2005,7 @@ public abstract class AbstractQueuedSynchronizer
             Node trail = null;
             while (t != null) {
                 Node next = t.nextWaiter;
-                // 这段逻辑其实从condition对列中清理waitStatus状态为CANCELLED的
+                // 这段逻辑其实从condition队列中清理waitStatus状态为CANCELLED的
                 if (t.waitStatus != Node.CONDITION) {
                     t.nextWaiter = null;
                     if (trail == null)
@@ -2022,7 +2035,7 @@ public abstract class AbstractQueuedSynchronizer
             // 如果当前线程获取到了锁，则返回true，否则抛出异常
             if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
-            // 拿到condition对列上的第一个节点
+            // 拿到condition队列上的第一个节点
             Node first = firstWaiter;
             if (first != null)
                 doSignal(first);
@@ -2085,6 +2098,7 @@ public abstract class AbstractQueuedSynchronizer
          * 0 if not interrupted.
          */
         private int checkInterruptWhileWaiting(Node node) {
+            // 如果中断为true，表示在park的时候被中断唤醒，并且中断是在signal调用之前，则需要抛出异常，否则表示signal已经执行过，或者没有中断
             return Thread.interrupted() ?
                 (transferAfterCancelledWait(node) ? THROW_IE : REINTERRUPT) :
                 0;
@@ -2120,18 +2134,18 @@ public abstract class AbstractQueuedSynchronizer
             // 如果线程中断，则抛出异常
             if (Thread.interrupted())
                 throw new InterruptedException();
-            // 创建一个新节点，节点状态是CONDITON，数据结构仍然是链表
+            // 创建一个新节点，节点状态是CONDITON，构建一个单向的链表
             Node node = addConditionWaiter();
-            // 释放当前锁，并唤醒AQS对列中的一个线程
+            // 释放当前锁，并唤醒AQS队列中的一个线程，这里是完全释放锁，因为重入锁
             int savedState = fullyRelease(node);
             int interruptMode = 0;
-            // 判断当前节点是否在同步对列上，如果没有，则还没有被SINGAL，则将当前线程阻塞
-            // isOnSyncQueue判断当前线程是否在对列上，如果waitStatus为CONDITION，或者不在对列上就会继续循环，阻塞
-            // waitStatus不为CONDITION，或者在对列上就会结束循环
+            // 判断当前节点是否在同步队列(AQS)上，如果没有，则还没有被SINGAL，则将当前线程阻塞
+            // isOnSyncQueue判断当前线程是否在AQS队列上，如果waitStatus为CONDITION，或者不在队列上就会阻塞当前线程
+            // waitStatus不为CONDITION，或者在队列上就会结束循环
             while (!isOnSyncQueue(node)) {
                 // 第一次判断返回false，因为前面已经释放了锁，这里会阻塞自己
                 LockSupport.park(this);
-                // 线程判断自己在等待的过程中是否被中断了，如果没有被中断，则继续循环，判断是否在队列上
+                // 线程判断自己在等待的过程中是否被中断过，是抛出异常还是重新中断
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                     break;
             }

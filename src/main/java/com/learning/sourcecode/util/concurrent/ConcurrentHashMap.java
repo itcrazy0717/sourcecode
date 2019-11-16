@@ -2578,7 +2578,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         // 通过cas处理transferIndex的值，并初始化bound和i，i指当前处理的槽位号，bound指需要处理的槽位边界
         // 注意槽位是从后往前进行处理的
         for (int i = 0, bound = 0; ; ) {
-            // 通过自旋不断使用cas尝试为当前线程分配任务，直到分配成功或任务对列已经被分配完毕
+            // 通过自旋不断使用cas尝试为当前线程分配任务，直到分配成功或任务队列已经被分配完毕
             // 然后下面的--i来控制桶的位置
             Node<K, V> f;
             int fh;
