@@ -711,19 +711,30 @@ public abstract class AbstractQueuedSynchronizer
          * unparkSuccessor, we need to know if CAS to reset status
          * fails, if so rechecking.
          */
+        // PROPAGATE状态下的节点对线程的唤醒是会进行传播的
         for (;;) {
             Node h = head;
             if (h != null && h != tail) {
                 int ws = h.waitStatus;
+                // 判断节点的状态是否为SIGNAL，如果是通过cas修改为0，并唤醒头节点的下一个节点
                 if (ws == Node.SIGNAL) {
                     if (!compareAndSetWaitStatus(h, Node.SIGNAL, 0))
                         continue;            // loop to recheck cases
                     unparkSuccessor(h);
                 }
+                // 到此分支，cas失败说明刚好有个节点入队，入队会将ws设置为-1
                 else if (ws == 0 &&
                          !compareAndSetWaitStatus(h, 0, Node.PROPAGATE))
                     continue;                // loop on failed CAS
             }
+            // 如果head节点未改变，则停止自旋，否则继续自旋
+            /**
+             * 如果AQS队列中有ThreadA、ThreadB、ThreadC
+             * h==head的情况，表明此时head还未被ThreadA占用，则退出循环，因为ThreadA被唤醒后
+             * 会接着唤醒后续挂起线程
+             * h!=head的情况，head被ThreadA占用，继续循环，但此时ThreadA的waitStatus=0，
+             * 只是进行cas操作，并且成功，此时ThreadA的waitStatus=-3，然后h==head，退出循环
+             */
             if (h == head)                   // loop if head changed
                 break;
         }
@@ -739,6 +750,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     private void setHeadAndPropagate(Node node, int propagate) {
         Node h = head; // Record old head for check below
+        // 设置头结点
         setHead(node);
         /*
          * Try to signal next queued node if:
@@ -758,8 +770,10 @@ public abstract class AbstractQueuedSynchronizer
          */
         if (propagate > 0 || h == null || h.waitStatus < 0 ||
             (h = head) == null || h.waitStatus < 0) {
+            // 获取头结点的下一个节点
             Node s = node.next;
             if (s == null || s.isShared())
+                // 共享锁唤醒 这里就是连续唤醒的关键点
                 doReleaseShared();
         }
     }
@@ -1038,6 +1052,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     private void doAcquireSharedInterruptibly(int arg)
         throws InterruptedException {
+        // 将节点设置为共享锁模式，并构建AQS队列
         final Node node = addWaiter(Node.SHARED);
         boolean failed = true;
         try {
@@ -1045,13 +1060,16 @@ public abstract class AbstractQueuedSynchronizer
                 final Node p = node.predecessor();
                 if (p == head) {
                     int r = tryAcquireShared(arg);
+                    // 当r>=0表示获取到了执行权限
                     if (r >= 0) {
+                        // 这里不是简单的设置头节点，还会唤醒其他线程的
                         setHeadAndPropagate(node, r);
                         p.next = null; // help GC
                         failed = false;
                         return;
                     }
                 }
+                // 阻塞线程 
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt())
                     throw new InterruptedException();
@@ -1363,9 +1381,11 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final void acquireSharedInterruptibly(int arg)
             throws InterruptedException {
+        // 被中断抛出异常
         if (Thread.interrupted())
             throw new InterruptedException();
         if (tryAcquireShared(arg) < 0)
+          // 当前线程需要加入到共享锁队列中 tryAcquireShared对于不同的子类，其实现不一样的
             doAcquireSharedInterruptibly(arg);
     }
 
@@ -1404,6 +1424,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
+            // 当到达临界值时，就会释放共享锁，比如countDown将state设置为0时
             doReleaseShared();
             return true;
         }
