@@ -286,6 +286,7 @@ class Thread implements Runnable {
 
     /**
      * 注意sleep方法不会释放锁，这里已经注释得很清楚了，如果检查到中断，在抛出异常时会清除中断标记
+     * LockSupport.park的时候不会清除中断标记
      * Causes the currently executing thread to sleep (temporarily cease
      * execution) for the specified number of milliseconds, subject to
      * the precision and accuracy of system timers and schedulers. The thread
