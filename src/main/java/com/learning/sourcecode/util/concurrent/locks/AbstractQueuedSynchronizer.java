@@ -794,6 +794,7 @@ public abstract class AbstractQueuedSynchronizer
 
         // Skip cancelled predecessors
         Node pred = node.prev;
+        // 跳过被取消的节点
         while (pred.waitStatus > 0)
             node.prev = pred = pred.prev;
 
@@ -1015,33 +1016,45 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
+     * 该方法在获取共享锁失败时调用，将线程加入AQS队列
      * Acquires in shared uninterruptible mode.
      * @param arg the acquire argument
      */
     private void doAcquireShared(int arg) {
+        // 将线程加入AQS队列尾
         final Node node = addWaiter(Node.SHARED);
         boolean failed = true;
         try {
             boolean interrupted = false;
+            // 自旋
             for (;;) {
+                // 获取前一个节点
                 final Node p = node.predecessor();
+                // 如果前一个节点为头结点
                 if (p == head) {
+                    // 如果前一个节点为头节点，就再次获取锁
                     int r = tryAcquireShared(arg);
+                    // 获取锁成功
                     if (r >= 0) {
+                        // 设置头节点，并唤醒后续节点
                         setHeadAndPropagate(node, r);
+                        // 将p.next设置为null，GC掉原来的头结点
                         p.next = null; // help GC
+                        // 如果有中断，则设置中断状态
                         if (interrupted)
                             selfInterrupt();
                         failed = false;
                         return;
                     }
                 }
+                // 判断是否需要挂起线程
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt())
                     interrupted = true;
             }
         } finally {
             if (failed)
+                // 取消获取锁的节点
                 cancelAcquire(node);
         }
     }
@@ -1546,6 +1559,8 @@ public abstract class AbstractQueuedSynchronizer
      */
     final boolean apparentlyFirstQueuedIsExclusive() {
         Node h, s;
+        // 返回头结点的下一个节点是否处于共享模式
+        // 如果返回true，则表示不是处于同享模式
         return (h = head) != null &&
             (s = h.next)  != null &&
             !s.isShared()         &&
