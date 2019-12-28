@@ -180,6 +180,7 @@ public class CyclicBarrier {
      */
     private void nextGeneration() {
         // signal completion of last generation
+        // 当达到屏障数时，则唤醒阻塞的线程
         trip.signalAll();
         // set up next generation
         count = parties;
