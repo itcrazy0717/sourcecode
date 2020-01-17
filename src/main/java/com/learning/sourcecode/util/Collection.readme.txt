@@ -1,0 +1,1 @@
+1.HashSet内部使用HashMap实现，存储的值就是HashMap中的Key，Value固定为Object对象
