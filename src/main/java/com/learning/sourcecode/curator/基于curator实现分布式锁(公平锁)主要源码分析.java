@@ -52,7 +52,7 @@ private boolean internalLockLoop(long startMillis, Long millisToWait, String our
                         try 
                         {
                             // use getData() instead of exists() to avoid leaving unneeded watchers which is a type of resource leak
-                            // exists()会导致导致资源泄漏，因此 exists()可以监听不存在的 ZNode，因此采用 getData()
+                            // exists()会导致导致资源泄漏因此采用 getData()进行替换
                             // 上一临时顺序节点如果被删除，会唤醒当前线程继续竞争锁，正常情况下能直接获得锁，因为锁是公平的
                             client.getData().usingWatcher(watcher).forPath(previousSequencePath);
                             // 带有时间的等待和不带时间的等待
@@ -104,10 +104,10 @@ public PredicateResults getsTheLock(CuratorFramework client, List<String> childr
     // 校验临时顺序节点是否有效
     validateOurIndex(sequenceNodeName, ourIndex);
     // 锁公平性的核心
-    // 由 InterProcessMutex 的构造函数可知，maxLeases 为 1，即只有ourIndex为0 时，线程才能持有锁，或者说该线程创建的临时顺序节点激活了锁
-    // Zookeeper 的临时顺序节点特性能保证跨多个 JVM 的线程并发创建节点时的顺序性，越早创建临时顺序节点成功的线程会更早地激活锁或获得锁
+    // 由InterProcessMutex的构造函数可知，maxLeases为 1，即只有ourIndex为0时，线程才能持有锁，或者说该线程创建的临时顺序节点激活了锁
+    // Zookeeper的临时顺序节点特性能保证跨多个JVM的线程并发创建节点时的顺序性，越早创建临时顺序节点成功的线程会更早地激活锁或获得锁
     boolean         getsTheLock = ourIndex < maxLeases;
-    // 如果已经获得了锁，则无需监听任何节点，否则需要监听上一顺序节点(ourIndex-1)因为锁是 公平的，因此无需监听除了(ourIndex-1)以外的所有节点，这是为了减少惊群效应，非常巧妙的设计！！
+    // 如果已经获得了锁，则无需监听任何节点，否则需要监听上一顺序节点(ourIndex-1)因为锁是公平的，因此无需监听除了(ourIndex-1)以外的所有节点，这是为了减少惊群效应，非常巧妙的设计！！
     String          pathToWatch = getsTheLock ? null : children.get(ourIndex - maxLeases);
     // 如果获得了锁，则pathToWatch为null，getsTheLock为true
     // 否则pathToWatch为当前节点的上一节点的路径，getsTheLock为false
