@@ -134,9 +134,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             final Thread current = Thread.currentThread();
             int c = getState();
             // 再次插队 判断当前锁的状态，如果为0，则用cas将其更新为1，表示获取到锁
+            // c=0表示无锁状态
             if (c == 0) {
                 if (compareAndSetState(0, acquires)) {
-                    // 设置独占线程为当前线程
+                    // 设置独占线程为当前线程，下次该线程再获取锁就不需要竞争了，直接获取
                     setExclusiveOwnerThread(current);
                     return true;
                 }

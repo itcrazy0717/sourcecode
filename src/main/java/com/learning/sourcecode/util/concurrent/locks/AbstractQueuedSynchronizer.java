@@ -543,6 +543,11 @@ public abstract class AbstractQueuedSynchronizer
 
     /**
      * The synchronization state.
+     * 同步状态
+     * 当state=0时，表示无锁状态
+     * 当state>0时，表示已经有线程获得了锁，也就是state=1，但是因为ReentrantLock允许重入
+     * 所以同一个线程多次获取同步锁的时候state会递增，比如重入5次，state就等于5，那么在释放锁的时候
+     * 同样需要释放5次直到state=0其他线程才有资格获取锁
      */
     private volatile int state;
 
@@ -605,6 +610,9 @@ public abstract class AbstractQueuedSynchronizer
                     tail = head;
             } else {
                 // 通过cas操作，将线程节点构建到链表尾部并返回它的前一个节点
+                // 注意在唤醒节点的时候，是从后往前遍历链表的，通过这里可知为什么要从后往前遍历
+                // 在cas操作设置tail之后，t.next=node之前，如果存在其他线程调用unlock方法从head开始往后遍历，由于t.next还没执行
+                // 这就意味着链表的关系还没完全建立完整，就会导致遍历到t节点的时候会出现中断现象，如果从后往前遍历，则不会出现这个问题
                 node.prev = t;
                 if (compareAndSetTail(t, node)) {
                     t.next = node;
@@ -919,6 +927,7 @@ public abstract class AbstractQueuedSynchronizer
      * @param arg the acquire argument
      * @return {@code true} if interrupted while waiting
      */
+    // 通过addWaiter方法把线程添加到链表后，会接着把Node作为参数传递给acquireQueued方法，去竞争锁
     final boolean acquireQueued(final Node node, int arg) {
         boolean failed = true;
         try {
@@ -939,6 +948,7 @@ public abstract class AbstractQueuedSynchronizer
                 }
                 // 注意线程如果获取锁失败并且应该被挂起的话，就会被挂起在该自旋中，等待唤醒
                 // 继续获取锁(tryAcquire获取锁失败)
+                // shouldParkAfterFailedAcquire方法会把前一个节点的waitStatus状态修改为-1
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt())
                     // 返回当前线程在等待过程中是否被中断过
@@ -1286,7 +1296,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final void acquire(int arg) {
         // 首先通过tryAcquire尝试获取锁
-        // 如果失败，再将线程增加到等待队列中
+        // 如果失败，再将线程封装成Node添加到AQS等待队列尾部
         if (!tryAcquire(arg) &&
             acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
             selfInterrupt();
@@ -1350,7 +1360,7 @@ public abstract class AbstractQueuedSynchronizer
      * @return the value returned from {@link #tryRelease}
      */
     public final boolean release(int arg) {
-        // 释放锁
+        // 释放锁独占锁
         if (tryRelease(arg)) {
             // 重点操作，通过头节点去唤醒下一个节点
             Node h = head;
@@ -1618,8 +1628,13 @@ public abstract class AbstractQueuedSynchronizer
         Node h = head;
         Node s;
         /**
-         * 这里逻辑其实简单判断是否加已经加入了线程节点
-         * 如果反复false表示未加入，返回true表示加入了等待线程节点，则继续去排队
+         * 这里逻辑其实非常简单就是判断是AQS队列中是否加入了线程节点Node
+         * 返回false表示未构建AQS队列
+         * 返回true表示构建了AQS队列
+         * 
+         * 如果h!=t，表示构建了双向队列
+         * h.next==null 说明有线程正在入队列的中间状态，肯定不是当前线程，一个线程同一时间只能做一件事
+         * 因为是多线程操作，所以需要判断h.next
          */
         return h != t &&
             ((s = h.next) == null || s.thread != Thread.currentThread());
