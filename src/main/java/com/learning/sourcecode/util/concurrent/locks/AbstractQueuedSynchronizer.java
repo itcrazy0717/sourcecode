@@ -1810,7 +1810,7 @@ public abstract class AbstractQueuedSynchronizer
         // 加入AQS队列，注意这里返回的是node的上一个节点，也就是原来的tail节点
         Node p = enq(node);
         int ws = p.waitStatus;
-        // 唤醒该节点，这个节点会在await中苏醒或者在调用signal后，会释放锁，在unlock的时候又会去唤醒锁，然后在await中苏醒
+        // 唤醒该节点，这个节点会在await中苏醒或者在调用signal后在unlock的时候又会去唤醒线程
         // 如果上一个节点被CANCELLED了，或者通过cas尝试修改上一个节点的状态为SIGNAL失败(SIGNAL：表示它的next节点需要停止阻塞，SIGNAL意味着需要被唤醒)
         // cas失败表示prev节点的状态已经是SIGNAL了，则在此进行唤醒
         // ws==0 cas时p.waitStatus=-1,表示prev已经唤醒，则cas失败，则在此进行唤醒
@@ -2001,6 +2001,7 @@ public abstract class AbstractQueuedSynchronizer
                 firstWaiter = node;
             else
                 t.nextWaiter = node;
+            // 新加入的Node是存储在链表尾的
             lastWaiter = node;
             return node;
         }
