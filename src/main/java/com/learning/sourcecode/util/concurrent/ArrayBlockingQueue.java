@@ -94,7 +94,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     private static final long serialVersionUID = -817911632652898426L;
     
     /**
-     * 存储队列元素
+     * 以数组的形式存储队列元素
      * The queued items
      */
     final Object[] items;
@@ -197,6 +197,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         @SuppressWarnings("unchecked")
         E x = (E) items[takeIndex];
         items[takeIndex] = null;
+        // 如果takeIndex的长度等于数组长度，则takeIndex置0，这里与putIndex对应，实现FIFO
         if (++takeIndex == items.length)
             takeIndex = 0;
         count--;
@@ -216,8 +217,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         // assert items[removeIndex] != null;
         // assert removeIndex >= 0 && removeIndex < items.length;
         final Object[] items = this.items;
+        // 如果removeIndex==takeIndex
         if (removeIndex == takeIndex) {
             // removing front item; just advance
+            // 直接将当前元素置空
             items[takeIndex] = null;
             if (++takeIndex == items.length)
                 takeIndex = 0;
@@ -231,6 +234,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             final int putIndex = this.putIndex;
             for (int i = removeIndex; ; ) {
                 int next = i + 1;
+                // 如果等于数组长度，则置0
                 if (next == items.length)
                     next = 0;
                 if (next != putIndex) {
@@ -330,6 +334,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws IllegalStateException if this queue is full
      * @throws NullPointerException  if the specified element is null
      */
+    /**
+     * 添加元素到队列中，如果队列满了，继续插入抛出异常IllegalStateException
+     */
     public boolean add(E e) {
         return super.add(e);
     }
@@ -343,6 +350,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      *
      * @throws NullPointerException if the specified element is null
      */
+    // 添加元素到队列，同时返回元素是否插入成功的状态
     public boolean offer(E e) {
         // 检查元素不为空
         checkNotNull(e);
@@ -354,6 +362,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             if (count == items.length)
                 return false;
             else {
+                // 将数据加入数组中
                 enqueue(e);
                 return true;
             }
@@ -369,13 +378,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
+    // 当阻塞队列满后，生产者继续通过put添加元素，队列会一直阻塞生产线程，直到队列可用
     public void put(E e) throws InterruptedException {
+        // 判空处理
         checkNotNull(e);
+        
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
+            // 当队列满后会阻塞
             while (count == items.length)
                 notFull.await();
+            // 将元素存储在数组中
             enqueue(e);
         } finally {
             lock.unlock();
@@ -390,6 +404,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
+    // 带有超时时间的offer操作，如果线程满后，阻塞等待时间，超过时间直接退出
     public boolean offer(E e, long timeout, TimeUnit unit)
             throws InterruptedException {
 
@@ -409,7 +424,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-
+    
+    // 从队列中取出元素，当队列为空，则直接返回null
     public E poll() {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -420,9 +436,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-
+    
+    // 基于阻塞的方式获取队列中的元素，如果队列为空，则take方法会一直阻塞，直到队列中有新的数据可以消费
     public E take() throws InterruptedException {
         final ReentrantLock lock = this.lock;
+        /**
+         * 这个也是获得锁，但是和lock的区别是，这个方法优先允许在等待时由其他线程调用等待线程的interrupt方法来中断等待直接返回。
+         * 而 lock方法是尝试获得锁成功后才响应中断
+         */
         lock.lockInterruptibly();
         try {
             // 没有元素会阻塞在这里
@@ -520,16 +541,23 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @return {@code true} if this queue changed as a result of the call
      */
     public boolean remove(Object o) {
+        // 判断处理
         if (o == null) return false;
         final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
+        // 获取可重入锁
         lock.lock();
         try {
+            // 如果队列不为空
             if (count > 0) {
+                // 获取添加元素的index
                 final int putIndex = this.putIndex;
+                // 获取移除元素的index
                 int i = takeIndex;
                 do {
+                    // 从takeIndex下标开始，找到需要被删除的元素
                     if (o.equals(items[i])) {
+                        // 删除指定元素
                         removeAt(i);
                         return true;
                     }
