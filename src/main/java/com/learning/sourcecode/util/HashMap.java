@@ -280,6 +280,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * resize operation. Should be less than TREEIFY_THRESHOLD, and at
      * most 6 to mesh with shrinkage detection under removal.
      */
+    // 红黑树转链表阈值
     static final int UNTREEIFY_THRESHOLD = 6;
 
     /**
@@ -673,7 +674,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     // 如果p节点的next为空，则将待插入的元素，直接添加在链表尾
                     if ((e = p.next) == null) {
                         p.next = newNode(hash, key, value, null);
-                        // 同一条链上，个数大于等于8，则转换成红黑树
+                        // 同一条链上，个数大于等于8，则可能会转换成红黑树，因为还要看桶的数量，当桶数量小于64时，只会进行扩容
                         if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
                             treeifyBin(tab, hash);
                         break;
@@ -760,6 +761,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     //将原来table中当前位置置null
                     oldTab[j] = null;
                     // 如果当前节点next为null，将其放置在newTab中的新位置
+                    // e.next为空，表示当前节点只有一个值，因此直接放入新位置即可
                     if (e.next == null)
                         newTab[e.hash & (newCap - 1)] = e;
                     // 如果是红黑树则进行红黑树操作
@@ -783,8 +785,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                              * 相当于其二进制向左移动了1位，其newCap-1的二进制全都为1，且比原来oldCap-1的二进制多了一个1
                              * eg:oldCap=16,newCap=32，注意求key的位置是用e.hash&(table.length-1)
                              * e.hash&0x1111=原来key的位置
-                             * e.hash&0x10000=0，表明e.hash在二进制的第5位上一定为0，所以：
-                             * e.hash&0x11111=也一定是原来key的位置
+                             * e.hash&0x10000=0 表示e.hash在二进制的第5位上一定为0，所以：
+                             * e.hash&0x11111也一定是原来key的位置
                              * 如果:
                              * e.hash&0x10000=1，表明e.hash在二进制的第5位上一定为1，所以：
                              * e.hash&0x11111=原来key的位置加上oldCap的长度即可（0x10000）
@@ -837,6 +839,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     final void treeifyBin(Node<K,V>[] tab, int hash) {
         int n, index; Node<K,V> e;
+        // 在进行红黑树转换的时候，如果当前tab的容量小于64，则进行扩容
         if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
             resize();
         else if ((e = tab[index = (n - 1) & hash]) != null) {
