@@ -289,6 +289,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * Should be at least 4 * TREEIFY_THRESHOLD to avoid conflicts
      * between resizing and treeification thresholds.
      */
+    // 链表转红黑树容量阈值
     static final int MIN_TREEIFY_CAPACITY = 64;
 
     /**
@@ -327,6 +328,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 return true;
             if (o instanceof Map.Entry) {
                 Entry<?,?> e = (Entry<?,?>)o;
+                // key与value都相等的时候才为true
                 if (Objects.equals(key, e.getKey()) &&
                     Objects.equals(value, e.getValue()))
                     return true;
