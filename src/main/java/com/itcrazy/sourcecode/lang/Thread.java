@@ -23,7 +23,7 @@
  *
  */
 
-package com.learning.sourcecode.lang;
+package com.itcrazy.sourcecode.lang;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -347,7 +347,7 @@ class Thread implements Runnable {
 
     /**
      * Initializes a Thread with the current AccessControlContext.
-     * @see #init(ThreadGroup,Runnable,String,long,AccessControlContext,boolean)
+     * @see #init(ThreadGroup,Runnable, String,long,AccessControlContext,boolean)
      */
     private void init(ThreadGroup g, Runnable target, String name,
                       long stackSize) {
@@ -444,7 +444,7 @@ class Thread implements Runnable {
 
     /**
      * Allocates a new {@code Thread} object. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup,Runnable, String) Thread}
      * {@code (null, null, gname)}, where {@code gname} is a newly generated
      * name. Automatically generated names are of the form
      * {@code "Thread-"+}<i>n</i>, where <i>n</i> is an integer.
@@ -455,7 +455,7 @@ class Thread implements Runnable {
 
     /**
      * Allocates a new {@code Thread} object. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup,Runnable, String) Thread}
      * {@code (null, target, gname)}, where {@code gname} is a newly generated
      * name. Automatically generated names are of the form
      * {@code "Thread-"+}<i>n</i>, where <i>n</i> is an integer.
@@ -479,7 +479,7 @@ class Thread implements Runnable {
 
     /**
      * Allocates a new {@code Thread} object. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup,Runnable, String) Thread}
      * {@code (group, target, gname)} ,where {@code gname} is a newly generated
      * name. Automatically generated names are of the form
      * {@code "Thread-"+}<i>n</i>, where <i>n</i> is an integer.
@@ -506,7 +506,7 @@ class Thread implements Runnable {
 
     /**
      * Allocates a new {@code Thread} object. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup,Runnable, String) Thread}
      * {@code (null, null, name)}.
      *
      * @param   name
@@ -518,7 +518,7 @@ class Thread implements Runnable {
 
     /**
      * Allocates a new {@code Thread} object. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup,Runnable, String) Thread}
      * {@code (group, null, name)}.
      *
      * @param  group
@@ -542,7 +542,7 @@ class Thread implements Runnable {
 
     /**
      * Allocates a new {@code Thread} object. This constructor has the same
-     * effect as {@linkplain #Thread(ThreadGroup,Runnable,String) Thread}
+     * effect as {@linkplain #Thread(ThreadGroup,Runnable, String) Thread}
      * {@code (null, target, name)}.
      *
      * @param  target
@@ -611,7 +611,7 @@ class Thread implements Runnable {
      * the specified <i>stack size</i>.
      *
      * <p>This constructor is identical to {@link
-     * #Thread(ThreadGroup,Runnable,String)} with the exception of the fact
+     * #Thread(ThreadGroup,Runnable, String)} with the exception of the fact
      * that it allows the thread stack size to be specified.  The stack size
      * is the approximate number of bytes of address space that the virtual
      * machine is to allocate for this thread's stack.  <b>The effect of the

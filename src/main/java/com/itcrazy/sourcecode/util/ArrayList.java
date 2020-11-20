@@ -23,7 +23,7 @@
  *
  */
 
-package com.learning.sourcecode.util;
+package com.itcrazy.sourcecode.util;
 
 import java.util.AbstractList;
 import java.util.Arrays;

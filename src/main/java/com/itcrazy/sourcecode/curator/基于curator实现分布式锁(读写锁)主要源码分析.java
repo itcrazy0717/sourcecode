@@ -1,4 +1,4 @@
-package com.learning.sourcecode.curator;
+package com.itcrazy.sourcecode.curator;
 // 基于curator实现的读写锁主要源码分析
 // InterProcessReadWriteLock
 // 读锁实现：

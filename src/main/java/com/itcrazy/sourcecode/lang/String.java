@@ -23,7 +23,7 @@
  *
  */
 
-package com.learning.sourcecode.lang;
+package com.itcrazy.sourcecode.lang;
 
 import java.io.ObjectStreamField;
 import java.io.UnsupportedEncodingException;

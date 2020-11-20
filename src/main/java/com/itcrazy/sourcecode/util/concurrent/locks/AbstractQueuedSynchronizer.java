@@ -33,7 +33,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package com.learning.sourcecode.util.concurrent.locks;
+package com.itcrazy.sourcecode.util.concurrent.locks;
 import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 import java.util.Collection;

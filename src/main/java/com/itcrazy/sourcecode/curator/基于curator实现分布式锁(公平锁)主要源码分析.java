@@ -1,4 +1,4 @@
-package com.learning.sourcecode.curator;// 基于curator实现分布式锁源码分析
+package com.itcrazy.sourcecode.curator;// 基于curator实现分布式锁源码分析
 InterProcessMutex
 // 锁信息
 private static class LockData
