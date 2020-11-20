@@ -504,6 +504,7 @@ public abstract class AbstractQueuedSynchronizer
          *
          * @return the predecessor of this node
          */
+        // 返回前序节点
         final Node predecessor() throws NullPointerException {
             Node p = prev;
             if (p == null)
@@ -564,6 +565,7 @@ public abstract class AbstractQueuedSynchronizer
      * Sets the value of synchronization state.
      * This operation has memory semantics of a {@code volatile} write.
      * @param newState the new state value
+     * 标识锁的状态，可重入锁会将其值递增
      */
     protected final void setState(int newState) {
         state = newState;
@@ -600,8 +602,24 @@ public abstract class AbstractQueuedSynchronizer
      * @return node's predecessor
      */
     private Node enq(final Node node) {
-        // 自旋 一直到线程获取锁
-        for (;;) {
+        // 自旋 一直到将节点通过cas操作加入链表尾部，然后才跳出自旋
+	    /**
+	     * 第一次循环
+	     * t=null
+	     * head->Node(new)
+	     * tail->Node(new)
+	     * 第二次循环
+	     * t=tail=Node
+	     * 进行链表拼接
+	     * node.prev=t=Node
+	     * 将node设置到链表尾
+	     * tail=node
+	     * Node.next=node
+	     * 此时形成双向链表
+	     * Node ->
+	     *      <-  node
+	     */
+	    for (;;) {
             Node t = tail;
             // 第一次自旋的时候tail为null，通过cas操作构建一个空的Node节点
             // 对tail和head进行赋值操作
