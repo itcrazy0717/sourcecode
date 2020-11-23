@@ -967,6 +967,7 @@ public abstract class AbstractQueuedSynchronizer
                 // 注意线程如果获取锁失败并且应该被挂起的话，就会被挂起在该自旋中，等待唤醒
                 // 继续获取锁(tryAcquire获取锁失败)
                 // shouldParkAfterFailedAcquire方法会把前一个节点的waitStatus状态修改为-1
+	            // 线程挂起在parkAndCheckInterrupt函数中
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt())
                     // 返回当前线程在等待过程中是否被中断过
@@ -984,9 +985,11 @@ public abstract class AbstractQueuedSynchronizer
      */
     private void doAcquireInterruptibly(int arg)
         throws InterruptedException {
-        final Node node = addWaiter(Node.EXCLUSIVE);
+        // 构建双向队列，以独占模式
+    	final Node node = addWaiter(Node.EXCLUSIVE);
         boolean failed = true;
         try {
+        	// 自旋，尝试获取锁
             for (;;) {
                 final Node p = node.predecessor();
                 if (p == head && tryAcquire(arg)) {
@@ -995,12 +998,14 @@ public abstract class AbstractQueuedSynchronizer
                     failed = false;
                     return;
                 }
+                // 与acquireQueued方法的区别在于，此处如果线程被中断，会抛出InterruptedException异常
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt())
                     throw new InterruptedException();
             }
         } finally {
             if (failed)
+            	// 获取失败，当前节点不在继续获取锁
                 cancelAcquire(node);
         }
     }
@@ -1016,10 +1021,12 @@ public abstract class AbstractQueuedSynchronizer
             throws InterruptedException {
         if (nanosTimeout <= 0L)
             return false;
+        // 到期时间
         final long deadline = System.nanoTime() + nanosTimeout;
         final Node node = addWaiter(Node.EXCLUSIVE);
         boolean failed = true;
         try {
+        	// 自旋
             for (;;) {
                 final Node p = node.predecessor();
                 if (p == head && tryAcquire(arg)) {
@@ -1028,9 +1035,14 @@ public abstract class AbstractQueuedSynchronizer
                     failed = false;
                     return true;
                 }
+                // 用到期时间与当前时间之差
                 nanosTimeout = deadline - System.nanoTime();
+                // 如果小于等于0，则表示已到期，到此处还没获取到锁，则返回
                 if (nanosTimeout <= 0L)
                     return false;
+                // nanosTimeout>1000纳秒，才阻塞等待
+	            // spinForTimeoutThreshold=1000,并且是纳秒值
+	            // 这里表示过滤哪些等待时间太短的线程，让其直接进入下一次自旋，毕竟1000纳秒时间太短了，影响精度
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
@@ -1336,9 +1348,11 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final void acquireInterruptibly(int arg)
             throws InterruptedException {
-        if (Thread.interrupted())
+        // 如果线程中断，则抛出InterruptedException异常
+    	if (Thread.interrupted())
             throw new InterruptedException();
-        if (!tryAcquire(arg))
+        // 尝试获取锁
+    	if (!tryAcquire(arg))
             doAcquireInterruptibly(arg);
     }
 
@@ -1359,11 +1373,14 @@ public abstract class AbstractQueuedSynchronizer
      * @return {@code true} if acquired; {@code false} if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
+    // 带有时间戳获取锁
     public final boolean tryAcquireNanos(int arg, long nanosTimeout)
             throws InterruptedException {
-        if (Thread.interrupted())
+        // 如果当前线程被中断，则抛出InterruptedException异常
+    	if (Thread.interrupted())
             throw new InterruptedException();
-        return tryAcquire(arg) ||
+        // 如果能直接获取到锁，就不用走doAcquireNanos函数了，注意这里是||操作
+    	return tryAcquire(arg) ||
             doAcquireNanos(arg, nanosTimeout);
     }
 
@@ -1651,8 +1668,9 @@ public abstract class AbstractQueuedSynchronizer
          * 返回true表示构建了AQS队列
          * 
          * 如果h!=t，表示构建了双向队列
-         * h.next==null 说明有线程正在入队列的中间状态，肯定不是当前线程，一个线程同一时间只能做一件事
-         * 因为是多线程操作，所以需要判断h.next
+         * 当h!=t成立时才会进行后续判断
+         * h.next==null 说明有线程正处在入队列的中间状态，肯定不是当前线程，一个线程同一时间只能做一件事
+         * 这里因为是多线程操作，所以需要判断h.next
          */
         return h != t &&
             ((s = h.next) == null || s.thread != Thread.currentThread());

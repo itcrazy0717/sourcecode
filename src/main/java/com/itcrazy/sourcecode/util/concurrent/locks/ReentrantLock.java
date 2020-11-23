@@ -195,6 +195,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         final boolean isLocked() {
+            // 只需判断state是否等于0，来表示是否上锁
             return getState() != 0;
         }
 
@@ -261,6 +262,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             final Thread current = Thread.currentThread();
             int c = getState();
             // 这里逻辑和非公锁大致一样，只有在获取锁时，判断是否有线程节点在排队 多了一个hasQueuedPredecessors方法
+	        // 如果没有排队节点，则通过cas去获取锁
             if (c == 0) {
                 if (!hasQueuedPredecessors() &&
                     compareAndSetState(0, acquires)) {
@@ -268,6 +270,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                     return true;
                 }
             }
+            // 如果当前线程与获取锁的线程相同，则将state增加，可重入的体现
             else if (current == getExclusiveOwnerThread()) {
                 int nextc = c + acquires;
                 if (nextc < 0)
