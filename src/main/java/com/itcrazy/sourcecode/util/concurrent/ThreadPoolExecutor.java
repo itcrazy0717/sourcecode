@@ -575,6 +575,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * The default rejected execution handler
+     * 默认拒绝策略，直接抛出异常
      */
     private static final RejectedExecutionHandler defaultHandler =
             new AbortPolicy();
@@ -675,6 +676,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             return getState() != 0;
         }
 
+        // 注意这里是独占锁，不允许重入
         protected boolean tryAcquire(int unused) {
             // worker自己实现了tryAcquire方法，这里不允许重入，独占锁，不能重入
             if (compareAndSetState(0, 1)) {
@@ -692,6 +694,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
         public void lock() { acquire(1); }
 
+        // 不阻塞形式获取锁
         public boolean tryLock() { return tryAcquire(1); }
 
         public void unlock() { release(1); }
@@ -742,7 +745,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     final void tryTerminate() {
         // 自旋尝试中断空闲的线程
         for (; ; ) {
-            int c = ctl.get();
+            // 获取线程池状态
+        	int c = ctl.get();
             /**
              * 1.如果线程池正在运行
              * 2.当前线程池状态为TIDYING
@@ -2193,7 +2197,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
             if (!e.isShutdown()) {
-                r.run();
+                // 使用调用者所在的线程来执行任务
+            	r.run();
             }
         }
     }
@@ -2216,7 +2221,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * @throws RejectedExecutionException always
          */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
-            throw new RejectedExecutionException("Task " + r.toString() +
+            // 抛出异常
+        	throw new RejectedExecutionException("Task " + r.toString() +
                                                  " rejected from " +
                                                  e.toString());
         }
@@ -2239,6 +2245,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * @param e the executor attempting to execute this task
          */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+        // 实现为空，直接丢弃
         }
     }
 
@@ -2264,7 +2271,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
             if (!e.isShutdown()) {
-                e.getQueue().poll();
+                // 丢弃阻塞队列中最靠前的任务
+            	e.getQueue().poll();
+            	// 执行当前任务
                 e.execute(r);
             }
         }
