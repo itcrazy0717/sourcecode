@@ -1813,6 +1813,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     private boolean findNodeFromTail(Node node) {
         Node t = tail;
+        // 从双向队列尾向前找，如果找到则返回true，否则返回false
         for (;;) {
             if (t == node)
                 return true;
