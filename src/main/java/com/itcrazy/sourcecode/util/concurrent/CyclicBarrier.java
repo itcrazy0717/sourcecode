@@ -217,6 +217,7 @@ public class CyclicBarrier {
             }
             // 对屏障数自减，当到达0的时候就会去执行
             int index = --count;
+            // 当index不为0的时候，走下面分支
             if (index == 0) {  // tripped
                 boolean ranAction = false;
                 try {
@@ -224,6 +225,7 @@ public class CyclicBarrier {
                     if (command != null)
                         command.run();
                     ranAction = true;
+                    // 唤醒阻塞的线程
                     nextGeneration();
                     return 0;
                 } finally {
@@ -236,7 +238,7 @@ public class CyclicBarrier {
             // 自旋 
             for (;;) {
                 try {
-                    // trip为condition，调用await方法释放锁，加入condition队列，唤醒AQS队列中挂起的线程
+                    // trip为condition，调用await方法释放锁，加入condition队列
                     if (!timed)
                         trip.await();
                     else if (nanos > 0L)
@@ -284,6 +286,7 @@ public class CyclicBarrier {
     public CyclicBarrier(int parties, Runnable barrierAction) {
         if (parties <= 0) throw new IllegalArgumentException();
         this.parties = parties;
+        // 构造时，初始化屏障
         this.count = parties;
         this.barrierCommand = barrierAction;
     }

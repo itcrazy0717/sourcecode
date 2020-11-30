@@ -740,6 +740,7 @@ public abstract class AbstractQueuedSynchronizer
         // PROPAGATE状态下的节点对线程的唤醒是会进行传播的
         for (;;) {
             Node h = head;
+            // 注意AQS队列中的头结点默认为一个空的Node节点
             if (h != null && h != tail) {
                 int ws = h.waitStatus;
                 // 判断节点的状态是否为SIGNAL，如果是通过cas修改为0，并唤醒头节点的下一个节点
@@ -867,6 +868,7 @@ public abstract class AbstractQueuedSynchronizer
      * @param node the node
      * @return {@code true} if thread should block
      */
+    // 在获取锁失败时，判断节点是否应该park
     private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
         // 注意 Requires that pred == node.prev.
         // waitStatus默认为0
@@ -2070,6 +2072,7 @@ public abstract class AbstractQueuedSynchronizer
             do {
                 Node next = first.nextWaiter;
                 first.nextWaiter = null;
+                // 将condition队列转换到AQS队列
                 transferForSignal(first);
                 first = next;
             } while (first != null);

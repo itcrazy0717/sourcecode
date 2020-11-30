@@ -168,7 +168,8 @@ public class Semaphore implements java.io.Serializable {
         private static final long serialVersionUID = 1192457210091910933L;
 
         Sync(int permits) {
-            setState(permits);
+            // 通过构造函数设置state的值
+        	setState(permits);
         }
 
         final int getPermits() {
@@ -233,7 +234,8 @@ public class Semaphore implements java.io.Serializable {
         }
 
         protected int tryAcquireShared(int acquires) {
-            return nonfairTryAcquireShared(acquires);
+            // 非公平锁下获取锁
+        	return nonfairTryAcquireShared(acquires);
         }
     }
 
@@ -273,7 +275,8 @@ public class Semaphore implements java.io.Serializable {
      *        must occur before any acquires will be granted.
      */
     public Semaphore(int permits) {
-        sync = new NonfairSync(permits);
+        // 初始化时必须有信号的许可个数 默认使用非公平锁
+    	sync = new NonfairSync(permits);
     }
 
     /**

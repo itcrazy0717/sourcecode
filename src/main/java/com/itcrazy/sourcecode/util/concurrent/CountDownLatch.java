@@ -171,11 +171,13 @@ public class CountDownLatch {
             return getState();
         }
 
+        // 直接判断state的值是否为0即可
         protected int tryAcquireShared(int acquires) {
             // 如果state=0，返回1，否则返回-1
             return (getState() == 0) ? 1 : -1;
         }
 
+        // countDown函数最终会调用该函数，进行计数器的减少
         protected boolean tryReleaseShared(int releases) {
             // Decrement count; signal when transition to zero
             // 自旋操作，每次将state-1
@@ -201,7 +203,7 @@ public class CountDownLatch {
      */
     public CountDownLatch(int count) {
         if (count < 0) throw new IllegalArgumentException("count < 0");
-        // 设置计数器
+        // 设置计数器 初始化时必须设置计数器
         this.sync = new Sync(count);
     }
 
@@ -233,7 +235,8 @@ public class CountDownLatch {
      *         while waiting
      */
     public void await() throws InterruptedException {
-        sync.acquireSharedInterruptibly(1);
+        // 调用await方法的线程，在计数器未减至0的时候就挂起
+    	sync.acquireSharedInterruptibly(1);
     }
 
     /**
@@ -293,7 +296,8 @@ public class CountDownLatch {
      * <p>If the current count equals zero then nothing happens.
      */
     public void countDown() {
-        sync.releaseShared(1);
+        // 释放计数器过程
+    	sync.releaseShared(1);
     }
 
     /**
