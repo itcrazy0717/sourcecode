@@ -23,7 +23,7 @@
  *
  */
 
-package com.itcrazy.sourcecode.util;
+package com.itcrazy.sourcecode.jdk1_7.util;
 
 import java.util.AbstractList;
 import java.util.Arrays;
@@ -424,6 +424,7 @@ public class ArrayList<E> extends AbstractList<E>
      * proper sequence
      */
     public Object[] toArray() {
+        // 通过拷贝数据转换成数组
         return Arrays.copyOf(elementData, size);
     }
 
@@ -568,6 +569,7 @@ public class ArrayList<E> extends AbstractList<E>
             System.arraycopy(elementData, index + 1, elementData, index,
                              numMoved);
         // 直接将最后一位设置为null，帮助GC
+        // 注意每次删除元素时，size都为自减1，所以在用for(i=0;i<size;i++)时，需注意，可能输出结果与预期有差异
         elementData[--size] = null; // clear to let GC do its work
         // 返回旧元素
         return oldValue;
@@ -586,6 +588,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @param o element to be removed from this list, if present
      * @return <tt>true</tt> if this list contained the specified element
      */
+    // remove元素需进行元素的对比，由于是对数组进行遍历，注意速度问题
     public boolean remove(Object o) {
         // 移除元素，分两种情况，是否为null，直接从前往后遍历
         if (o == null) {
