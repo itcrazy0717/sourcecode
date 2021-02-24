@@ -945,6 +945,7 @@ public class ArrayList<E> extends AbstractList<E>
      *
      * @return an iterator over the elements in this list in proper sequence
      */
+    // 注意在使用增强for循环的时候，内部会初始化该迭代器
     public Iterator<E> iterator() {
         return new Itr();
     }
@@ -955,6 +956,7 @@ public class ArrayList<E> extends AbstractList<E>
     private class Itr implements Iterator<E> {
         int cursor;       // index of next element to return
         int lastRet = -1; // index of last element returned; -1 if no such
+        // 这里会对expectedModCount进行赋值，此时该值为modCount，集合修改的次数
         int expectedModCount = modCount;
 
         Itr() {}
@@ -965,6 +967,9 @@ public class ArrayList<E> extends AbstractList<E>
 
         @SuppressWarnings("unchecked")
         public E next() {
+            // 由于增强for循环取值是实际是用的next方法，此处会进行modCount和expectedModCount的检查
+            // 初始时expectedModCount == modCount，如果在增强for循环中进行了修改，如remove，此时只对modCount进行了增加
+            // 而未进行同步，因此会抛出ConcurrentModificationException
             checkForComodification();
             int i = cursor;
             if (i >= size)
@@ -979,12 +984,14 @@ public class ArrayList<E> extends AbstractList<E>
         public void remove() {
             if (lastRet < 0)
                 throw new IllegalStateException();
+            // 检查修改次数
             checkForComodification();
 
             try {
                 ArrayList.this.remove(lastRet);
                 cursor = lastRet;
                 lastRet = -1;
+                // 注意这里同步了modCount的值
                 expectedModCount = modCount;
             } catch (IndexOutOfBoundsException ex) {
                 throw new ConcurrentModificationException();
@@ -1014,6 +1021,7 @@ public class ArrayList<E> extends AbstractList<E>
         }
 
         final void checkForComodification() {
+            // 如果modCount值与expectedModCount不相等，则抛出ConcurrentModificationException异常
             if (modCount != expectedModCount)
                 throw new ConcurrentModificationException();
         }
