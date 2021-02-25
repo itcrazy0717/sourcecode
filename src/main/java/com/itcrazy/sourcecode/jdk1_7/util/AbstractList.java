@@ -372,6 +372,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         }
         // next是返回当前元素   
         public E next() {
+        	// 增强for循环的next时都会判断expectedModCount与modCount是否相等
             checkForComodification();
             try {
                 int i = cursor;
