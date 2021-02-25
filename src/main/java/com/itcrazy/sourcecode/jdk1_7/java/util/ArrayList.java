@@ -23,7 +23,7 @@
  *
  */
 
-package com.itcrazy.sourcecode.jdk1_7.util;
+package com.itcrazy.sourcecode.jdk1_7.java.util;
 
 import java.util.AbstractList;
 import java.util.Arrays;
