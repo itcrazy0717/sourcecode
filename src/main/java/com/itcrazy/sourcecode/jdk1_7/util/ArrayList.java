@@ -557,7 +557,8 @@ public class ArrayList<E> extends AbstractList<E>
         // 校验index正确性
         rangeCheck(index);
 
-        // 修改次数自增
+        // 修改次数自增，这里未对expectedModCount进行同步，所以如果在增强for循环中使用
+	    // ArrayList#remove进行元素的删除，就会抛出ConcurrentModificationException
         modCount++;
         // 取出旧元素
         E oldValue = elementData(index);
@@ -957,10 +958,14 @@ public class ArrayList<E> extends AbstractList<E>
         int cursor;       // index of next element to return
         int lastRet = -1; // index of last element returned; -1 if no such
         // 这里会对expectedModCount进行赋值，此时该值为modCount，集合修改的次数
-        int expectedModCount = modCount;
+        // 增强for循环，初始化时赋值
+	    int expectedModCount = modCount;
 
         Itr() {}
 
+        // 增强for循环的时候，需要先判断是否有元素，才会进行下一次循环
+	    // 也就是next函数中，如果删除倒数第二个元素会导致cursor和size相等
+	    // 从而不会进入next函数中，也就不会抛出ConcurrentModificationException
         public boolean hasNext() {
             return cursor != size;
         }
@@ -977,6 +982,8 @@ public class ArrayList<E> extends AbstractList<E>
             Object[] elementData = ArrayList.this.elementData;
             if (i >= elementData.length)
                 throw new ConcurrentModificationException();
+            // 游标值是索引+1，如果删除倒数第二个元素，此时cursor与size相等，导致hasNext为fasle，从而不会进入next函数中
+	        // 也就不会抛出异常
             cursor = i + 1;
             return (E) elementData[lastRet = i];
         }
@@ -991,7 +998,7 @@ public class ArrayList<E> extends AbstractList<E>
                 ArrayList.this.remove(lastRet);
                 cursor = lastRet;
                 lastRet = -1;
-                // 注意这里同步了modCount的值
+                // 注意这里同步了modCount的值，所以使用迭代器的方法进行删除不会有ConcurrentModificationException异常
                 expectedModCount = modCount;
             } catch (IndexOutOfBoundsException ex) {
                 throw new ConcurrentModificationException();
