@@ -311,6 +311,7 @@ public class LinkedList<E>
      *
      * @param e the element to add
      */
+    // 增加元素在头结点，内部调用linkFirst方法
     public void addFirst(E e) {
         linkFirst(e);
     }
@@ -322,6 +323,7 @@ public class LinkedList<E>
      *
      * @param e the element to add
      */
+    // 增加元素在链表尾
     public void addLast(E e) {
         linkLast(e);
     }
@@ -626,9 +628,12 @@ public class LinkedList<E>
      * @return the index of the first occurrence of the specified element in
      *         this list, or -1 if this list does not contain the element
      */
+    // 查找元素索引
     public int indexOf(Object o) {
         int index = 0;
+        // 分元素是否为空
         if (o == null) {
+        	// 循环查找，从头往后查找
             for (Node<E> x = first; x != null; x = x.next) {
                 if (x.item == null)
                     return index;
@@ -681,6 +686,7 @@ public class LinkedList<E>
      * @return the head of this list, or {@code null} if this list is empty
      * @since 1.5
      */
+    // peek取出头结点元素
     public E peek() {
         final Node<E> f = first;
         return (f == null) ? null : f.item;
@@ -693,6 +699,7 @@ public class LinkedList<E>
      * @throws NoSuchElementException if this list is empty
      * @since 1.5
      */
+    // 获取头结点元素，但是不会移除元素
     public E element() {
         return getFirst();
     }
@@ -703,6 +710,7 @@ public class LinkedList<E>
      * @return the head of this list, or {@code null} if this list is empty
      * @since 1.5
      */
+    // poll会移除元素
     public E poll() {
         final Node<E> f = first;
         return (f == null) ? null : unlinkFirst(f);
@@ -726,6 +734,7 @@ public class LinkedList<E>
      * @return {@code true} (as specified by {@link Queue#offer})
      * @since 1.5
      */
+    // offer增加元素，增加到链表尾
     public boolean offer(E e) {
         return add(e);
     }
