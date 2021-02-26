@@ -23,7 +23,7 @@
  *
  */
 
-package com.itcrazy.sourcecode.jdk1_7.java.util;
+package com.itcrazy.sourcecode.jdk.java.util;
 
 /**
  * Doubly-linked list implementation of the {@code List} and {@code Deque}
@@ -517,10 +517,14 @@ public class LinkedList<E>
      * @return the element previously at the specified position
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
+    // 在指定位置上设置值
     public E set(int index, E element) {
-        checkElementIndex(index);
-        Node<E> x = node(index);
+        // 校验index是否合法
+    	checkElementIndex(index);
+        // 通过index找到旧元素
+    	Node<E> x = node(index);
         E oldVal = x.item;
+        // 赋新值，并返回旧值
         x.item = element;
         return oldVal;
     }
@@ -534,12 +538,15 @@ public class LinkedList<E>
      * @param element element to be inserted
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
+    // 在指定位置增加元素
     public void add(int index, E element) {
-        checkPositionIndex(index);
-
+        // 校验index
+    	checkPositionIndex(index);
+        // 如果index在最后位置，则直接将元素添加在最后
         if (index == size)
             linkLast(element);
         else
+        	// 否则，通过index找到元素，在该元素之前插入新节点即可
             linkBefore(element, node(index));
     }
 
