@@ -23,7 +23,7 @@
  *
  */
 
-package com.itcrazy.sourcecode.util;
+package com.itcrazy.sourcecode.jdk.java.util;
 
 import java.io.IOException;
 import java.io.InvalidObjectException;
