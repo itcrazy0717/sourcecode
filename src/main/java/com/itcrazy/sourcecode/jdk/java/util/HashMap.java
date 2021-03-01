@@ -415,6 +415,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * (We also tolerate length zero in some operations to allow
      * bootstrapping mechanics that are currently not needed.)
      */
+    // 底层数据结构为Node形式的数组
     transient Node<K,V>[] table;
 
     /**
@@ -621,6 +622,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * @return <tt>true</tt> if this map contains a mapping for the specified
      * key.
      */
+    // 判断是否包含key
     public boolean containsKey(Object key) {
         return getNode(hash(key), key) != null;
     }
@@ -658,7 +660,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         if ((tab = table) == null || (n = tab.length) == 0)
             n = (tab = resize()).length;
         // 当前位置上为空，则直接加入节点，在多线程环境下造成线程不安全问题
+        // 如果i位置上没有元素，寻找位置是当前数组长度-1与当前key的hash值进行与操作
+        // 注意hash值不相同，但是通过(n-1)&hash也可能得到同一个值，从而实现覆盖或者链式存储
         if ((p = tab[i = (n - 1) & hash]) == null)
+            // 创造一个新的non-tree的节点
             tab[i] = newNode(hash, key, value, null);
         // i位置上有元素
         else {
@@ -681,7 +686,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                             treeifyBin(tab, hash);
                         break;
                     }
-                    // 如果next位置上已经存在相同的key，则break
+                    // 如果next位置上已经存在相同的key，则break，然后覆盖next元素上的value即可
                     if (e.hash == hash &&
                         ((k = e.key) == key || (key != null && key.equals(k))))
                         break;
@@ -754,6 +759,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         @SuppressWarnings({"rawtypes","unchecked"})
             Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
         table = newTab;
+        // 前面的计算目的：计算桶的大小
+        // 下面的才是具体的扩容
         // 具体扩容实现 链表分成两条链进行扩容
         if (oldTab != null) {
             for (int j = 0; j < oldCap; ++j) {
@@ -779,19 +786,24 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                         do {
                             // 由于是链表循环，因此需存储next节点的值，这种形式在jdk1.7中出现过多次
                             next = e.next;
-                            // 因为在hash分布的时候是(length-1)&hash值，这里的判断为了和未扩容之前达成一致
+                            // 因为在hash分布的时候是(length-1)&hash值，这里的判断为了和未扩容之前达成一致，保证元素位置的不变性
+                            // 也就是说新旧(n-1)&hash的值，可能是相同的，保证元素位置的不变性
                             /**
-                             *这里需要注意一下，这里是用元素的hash值，与原来table长度做&操作
+                             * 这里需要注意一下，这里是用元素key的hash值，与原来table长度做&操作
                              * 如果为0，则表示e.hash&(newCap-1)和e.hash&(oldCap-1)是一样的
-                             * 也就说元素的位置在newTable中是不变的，因为newTable的大小为oldTable大小的2倍
-                             * 相当于其二进制向左移动了1位，其newCap-1的二进制全都为1，且比原来oldCap-1的二进制多了一个1
-                             * eg:oldCap=16,newCap=32，注意求key的位置是用e.hash&(table.length-1)
+                             * 也就说元素的位置在newTable中是不变的，具体分析流程如下
+                             * newTable的大小为oldTable大小的2倍相当于其二进制向左移动了1位，其newCap-1的二进制全都为1，且比原来oldCap-1的二进制多了一个1
+                             * 
+                             * 示例:
+                             * oldCap=16,newCap=32，注意求key的位置是用e.hash&(table.length-1)
                              * e.hash&0x1111=原来key的位置
+                             * (e.hash & oldCap) == 0 的情况：
                              * e.hash&0x10000=0 表示e.hash在二进制的第5位上一定为0，所以：
-                             * e.hash&0x11111也一定是原来key的位置
-                             * 如果:
+                             * e.hash&0x11111 也一定是原来key的位置
+                             * (e.hash & oldCap) !=0 的情况:
                              * e.hash&0x10000=1，表明e.hash在二进制的第5位上一定为1，所以：
                              * e.hash&0x11111=原来key的位置加上oldCap的长度即可（0x10000）
+                             * 
                              * 这样根据一个二进制位就将原来的一条链表分成两条链表进行存储，这里非常的关键，不是很好理解
                              * 仔细理解上面的解释，相信你会发现这是非常神奇的一个技巧
                              */
@@ -842,6 +854,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     final void treeifyBin(Node<K,V>[] tab, int hash) {
         int n, index; Node<K,V> e;
         // 在进行红黑树转换的时候，如果当前tab的容量小于64，则进行扩容
+        // 注意这里，如果桶的长度小于64，则只需进行扩容
         if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
             resize();
         else if ((e = tab[index = (n - 1) & hash]) != null) {
@@ -901,16 +914,21 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     final Node<K,V> removeNode(int hash, Object key, Object value,
                                boolean matchValue, boolean movable) {
         Node<K,V>[] tab; Node<K,V> p; int n, index;
+        // 判断当前位置上是否存在元素
         if ((tab = table) != null && (n = tab.length) > 0 &&
             (p = tab[index = (n - 1) & hash]) != null) {
             Node<K,V> node = null, e; K k; V v;
+            // first find 找到要删除的key
             if (p.hash == hash &&
                 ((k = p.key) == key || (key != null && key.equals(k))))
                 node = p;
+            // 在第一个位置上未找到，则继续向下寻找
             else if ((e = p.next) != null) {
+                 // 如果是红黑树，则走红黑树分支
                 if (p instanceof TreeNode)
                     node = ((TreeNode<K,V>)p).getTreeNode(hash, key);
                 else {
+                    // 否则顺着链表向下寻找，注意条件必须是hashCode相等，并且key也相同的元素
                     do {
                         if (e.hash == hash &&
                             ((k = e.key) == key ||
@@ -922,16 +940,23 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     } while ((e = e.next) != null);
                 }
             }
+            // 移除key操作
             if (node != null && (!matchValue || (v = node.value) == value ||
                                  (value != null && value.equals(v)))) {
+                // 红黑树移除
                 if (node instanceof TreeNode)
                     ((TreeNode<K,V>)node).removeTreeNode(this, tab, movable);
+                // 如果node就是桶的第一个位置，则直接将桶位置的当前元素赋值为其next
                 else if (node == p)
                     tab[index] = node.next;
+                // 否则将p.next赋值为node的next，从而实现截取，也就是删除了要寻找的key
                 else
                     p.next = node.next;
+                // 修改次数增加
                 ++modCount;
+                // 总个数减少
                 --size;
+                // 钩子函数，LinkedHashMap使用
                 afterNodeRemoval(node);
                 return node;
             }
@@ -943,9 +968,12 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * Removes all of the mappings from this map.
      * The map will be empty after this call returns.
      */
+    // 清空集合
     public void clear() {
         Node<K,V>[] tab;
+        // 修改次数增加，并且将size赋值为0，注意这里只需要将桶的第一个元素位置赋值为null即可
         modCount++;
+        
         if ((tab = table) != null && size > 0) {
             size = 0;
             for (int i = 0; i < tab.length; ++i)
@@ -961,10 +989,12 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * @return <tt>true</tt> if this map maps one or more keys to the
      *         specified value
      */
+    // 是否包含value
     public boolean containsValue(Object value) {
         Node<K,V>[] tab; V v;
         if ((tab = table) != null && size > 0) {
             for (int i = 0; i < tab.length; ++i) {
+                // 注意此处找到value就直接返回，可能有一个或多个key包含value值
                 for (Node<K,V> e = tab[i]; e != null; e = e.next) {
                     if ((v = e.value) == value ||
                         (value != null && value.equals(v)))
@@ -990,6 +1020,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      *
      * @return a set view of the keys contained in this map
      */
+    // 获取key的集合
+    // 注意Set集合只有通过遍历才能获取得到，但是在idea调试的时候ks确有值，是因为idea会默认调用类的toString方法
+    // 这里会调用java.util.AbstractCollection.toString方法显示了元素的个数，所以这里会发现有值
+    // 具体参考：https://blog.csdn.net/li_canhui/article/details/85051250
     public Set<K> keySet() {
         Set<K> ks = keySet;
         if (ks == null) {
