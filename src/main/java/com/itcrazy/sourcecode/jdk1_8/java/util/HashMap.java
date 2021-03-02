@@ -23,7 +23,7 @@
  *
  */
 
-package com.itcrazy.sourcecode.jdk.java.util;
+package com.itcrazy.sourcecode.jdk1_8.java.util;
 
 import java.io.IOException;
 import java.io.InvalidObjectException;
@@ -297,7 +297,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * TreeNode subclass, and in LinkedHashMap for its Entry subclass.)
      */
     static class Node<K,V> implements Entry<K,V> {
-        final int hash;
+        // key的hashCode值
+    	final int hash;
         final K key;
         V value;
         Node<K,V> next;
@@ -397,6 +398,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /**
      * Returns a power of two size for the given target capacity.
      */
+    // 这里总是返回2的N次方
     static final int tableSizeFor(int cap) {
         int n = cap - 1;
         n |= n >>> 1;
@@ -436,6 +438,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * rehash).  This field is used to make iterators on Collection-views of
      * the HashMap fail-fast.  (See ConcurrentModificationException).
      */
+    // 修改次数，只有自增
     transient int modCount;
 
     /**
@@ -447,6 +450,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     // Additionally, if the table array has not been allocated, this
     // field holds the initial array capacity, or zero signifying
     // DEFAULT_INITIAL_CAPACITY.)
+    // 扩容阈值
     int threshold;
 
     /**
@@ -454,6 +458,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      *
      * @serial
      */
+    // 扩容因子
     final float loadFactor;
 
     /* ---------------- Public operations -------------- */
@@ -477,6 +482,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             throw new IllegalArgumentException("Illegal load factor: " +
                                                loadFactor);
         this.loadFactor = loadFactor;
+        // 注意此处的阈值是根据初始容量，取其最小的2的N次方值
         this.threshold = tableSizeFor(initialCapacity);
     }
 
@@ -747,6 +753,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         else {               // zero initial threshold signifies using defaults
             // 初始化容量为16
             newCap = DEFAULT_INITIAL_CAPACITY;
+            // 设置扩容阈值
             newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
         }
         // 这里再次对扩容阈值进行判断，如果未初始化，则进行初始化
@@ -973,7 +980,6 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         Node<K,V>[] tab;
         // 修改次数增加，并且将size赋值为0，注意这里只需要将桶的第一个元素位置赋值为null即可
         modCount++;
-        
         if ((tab = table) != null && size > 0) {
             size = 0;
             for (int i = 0; i < tab.length; ++i)
