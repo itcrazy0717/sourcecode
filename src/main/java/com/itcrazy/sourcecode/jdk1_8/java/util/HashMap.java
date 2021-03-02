@@ -1038,10 +1038,12 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         }
         return ks;
     }
-
+    
+    // 内部KeySet集合，可遍历HashMap的key
     final class KeySet extends AbstractSet<K> {
         public final int size()                 { return size; }
         public final void clear()               { HashMap.this.clear(); }
+        // 迭代器
         public final Iterator<K> iterator()     { return new KeyIterator(); }
         public final boolean contains(Object o) { return containsKey(o); }
         public final boolean remove(Object key) {
@@ -1548,13 +1550,16 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         Node<K,V> current;     // current entry
         int expectedModCount;  // for fast-fail
         int index;             // current slot
-
+         
+        // Hash迭代器
         HashIterator() {
             expectedModCount = modCount;
             Node<K,V>[] t = table;
+            // 初始将current和next都赋值为null
             current = next = null;
             index = 0;
             if (t != null && size > 0) { // advance to first entry
+                // 这里主要作用就是将next赋值为第一个元素
                 do {} while (index < t.length && (next = t[index++]) == null);
             }
         }
@@ -1562,14 +1567,18 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         public final boolean hasNext() {
             return next != null;
         }
-
+         
+        // nextNode返回的是整个节点值
         final Node<K,V> nextNode() {
             Node<K,V>[] t;
+            // 初始化是已经将next元素赋值为桶的第一个节点元素
             Node<K,V> e = next;
+            // fast-fail
             if (modCount != expectedModCount)
                 throw new ConcurrentModificationException();
             if (e == null)
                 throw new NoSuchElementException();
+            // 继续next的下一个迭代
             if ((next = (current = e).next) == null && (t = table) != null) {
                 do {} while (index < t.length && (next = t[index++]) == null);
             }
@@ -1904,6 +1913,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     // Callbacks to allow LinkedHashMap post-actions
+    // 钩子函数，LinkedHashMap实现
     void afterNodeAccess(Node<K,V> p) { }
     void afterNodeInsertion(boolean evict) { }
     void afterNodeRemoval(Node<K,V> p) { }
