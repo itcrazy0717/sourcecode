@@ -232,8 +232,8 @@ public class LinkedHashMap<K,V>
      *
      * @serial
      */
-    // 按何种顺序排列元素 true-访问顺序 false-插入顺序
-    // 默认为false，也就是插入顺序        
+    // 是否更改元素的顺序 false-不更改也就是插入顺序 true-更改，会将访问过的元素放置在链表为，实现LRU(最近最少使用)
+    // 默认为false，也就是插入顺序
     final boolean accessOrder;
 
     // internal utilities
@@ -276,9 +276,12 @@ public class LinkedHashMap<K,V>
         head = tail = null;
     }
 
+    // 覆写HashMap中的方法，类似于钩子方法，在put元素时会调用该方法创建新的节点
     Node<K,V> newNode(int hash, K key, V value, Node<K,V> e) {
         Entry<K,V> p =
             new Entry<K,V>(hash, key, value, e);
+        // 将新节点加入链表尾
+	    // 简单的链表组装
         linkNodeLast(p);
         return p;
     }
@@ -304,11 +307,15 @@ public class LinkedHashMap<K,V>
         return t;
     }
 
+    // 移除元素java.util.HashMap.afterNodeRemoval 847行 在移除元素时被调用
     void afterNodeRemoval(Node<K,V> e) { // unlink
-        Entry<K,V> p =
+        // 取出e的前驱和后置节点
+    	Entry<K,V> p =
             (Entry<K,V>)e, b = p.before, a = p.after;
-        p.before = p.after = null;
-        if (b == null)
+        // 从双向链表中删除元素
+    	p.before = p.after = null;
+        // 重新构建链表
+    	if (b == null)
             head = a;
         else
             b.after = a;
@@ -318,23 +325,36 @@ public class LinkedHashMap<K,V>
             a.before = b;
     }
 
+    // 这里在put方法中进行调用java.util.HashMap.afterNodeInsertion 664行，在插入元素后判断是否要移除最老元素
     void afterNodeInsertion(boolean evict) { // possibly remove eldest
         Entry<K,V> first;
+        // 注意removeEldestEntry方法默认返回的是false，也就是不删除最老元素
+	    // 实现简化版LRU算法的核心就在这里，可以重写removeEldestEntry方法
+	    // 具体参考：https://juejin.cn/post/6844903917524893709
         if (evict && (first = head) != null && removeEldestEntry(first)) {
-            K key = first.key;
-            removeNode(hash(key), key, null, false, true);
+            // 将链表头的元素删除掉，移除最近最少使用的元素
+        	K key = first.key;
+            // 调用父类的方法进行移除
+        	removeNode(hash(key), key, null, false, true);
         }
     }
 
+    // put方法中会调用该函数，LinkedHashMap中get方法也会调用该函数 java.util.HashMap.afterNodeAccess 657行
+	// 将元素调整到链表尾
     void afterNodeAccess(Node<K,V> e) { // move node to last
         Entry<K,V> last;
+        // 如果accessOrder=true，并且该元素不是尾结点
         if (accessOrder && (last = tail) != e) {
+           // 取出e的前驱和后置节点
             Entry<K,V> p =
                 (Entry<K,V>)e, b = p.before, a = p.after;
+            // 将p.after赋值为null
             p.after = null;
+            // 设置头结点
             if (b == null)
                 head = a;
             else
+            	// 这里是将p节点从链表中移除，为了后续将该节点构建在链表尾
                 b.after = a;
             if (a != null)
                 a.before = b;
@@ -342,11 +362,14 @@ public class LinkedHashMap<K,V>
                 last = b;
             if (last == null)
                 head = p;
+            // 将p节点构建在链表尾
             else {
                 p.before = last;
                 last.after = p;
             }
+            // 将尾节点赋值为p，也就是e
             tail = p;
+            // 修改次数自增
             ++modCount;
         }
     }
@@ -459,10 +482,13 @@ public class LinkedHashMap<K,V>
      * The {@link #containsKey containsKey} operation may be used to
      * distinguish these two cases.
      */
+    // 获取元素
     public V get(Object key) {
-        Node<K,V> e;
+    	Node<K,V> e;
+    	// 这里走是HashMap中的方法
         if ((e = getNode(hash(key), key)) == null)
             return null;
+        // 如果accessOrder为true，这里会将访问到的元素修改其存储位置，放置在链表尾
         if (accessOrder)
             afterNodeAccess(e);
         return e.value;
@@ -471,6 +497,7 @@ public class LinkedHashMap<K,V>
     /**
      * {@inheritDoc}
      */
+    // 此处和get方法类似
     public V getOrDefault(Object key, V defaultValue) {
        Node<K,V> e;
        if ((e = getNode(hash(key), key)) == null)
@@ -529,6 +556,7 @@ public class LinkedHashMap<K,V>
      * @return   <tt>true</tt> if the eldest entry should be removed
      *           from the map; <tt>false</tt> if it should be retained.
      */
+    // 实现简化版LRU就需要覆写该方法,通过自定义类继承LinkedHashMap，在构造函数中增加缓存值，通过数据总量与缓存值的大小进行比较即可
     protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
         return false;
     }
@@ -553,6 +581,7 @@ public class LinkedHashMap<K,V>
      */
     public Set<K> keySet() {
         Set<K> ks = keySet;
+        // keySet和HashMap类似，属于懒加载
         if (ks == null) {
             ks = new LinkedKeySet();
             keySet = ks;
