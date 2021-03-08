@@ -139,17 +139,20 @@ public class TreeMap<K,V>
      */
     // 可使用比较器
     private final Comparator<? super K> comparator;
-
+   
+    // 红黑树的根节点
     private transient Entry<K,V> root;
 
     /**
      * The number of entries in the tree
      */
+    // 元素个数
     private transient int size = 0;
 
     /**
      * The number of structural modifications to the tree.
      */
+    // 修改次数 fail-fast用于快速失败
     private transient int modCount = 0;
 
     /**
@@ -362,14 +365,19 @@ public class TreeMap<K,V>
      */
     final Entry<K,V> getEntry(Object key) {
         // Offload comparator-based version for sake of performance
+        // 如果比较器不为空
         if (comparator != null)
+            // 直接通过比较器，找到对应的节点进行返回
             return getEntryUsingComparator(key);
+        // 如果key为空，则抛出异常
         if (key == null)
             throw new NullPointerException();
         @SuppressWarnings("unchecked")
             Comparable<? super K> k = (Comparable<? super K>) key;
         Entry<K,V> p = root;
+        // 循环查找，一直找到对应的key的节点
         while (p != null) {
+            // 比较当前key和根节点key的大小，根据具体值遍历左子树还是右子树
             int cmp = k.compareTo(p.key);
             if (cmp < 0)
                 p = p.left;
@@ -393,6 +401,7 @@ public class TreeMap<K,V>
         Comparator<? super K> cpr = comparator;
         if (cpr != null) {
             Entry<K,V> p = root;
+            // 逻辑一样，根据key与根节点key进行比较
             while (p != null) {
                 int cmp = cpr.compare(k, p.key);
                 if (cmp < 0)
@@ -412,21 +421,28 @@ public class TreeMap<K,V>
      * key; if no such entry exists (i.e., the greatest key in the Tree is less
      * than the specified key), returns {@code null}.
      */
+    // 获取TreeMap中不小于key的最小节点，若不存在则返回null
     final Entry<K,V> getCeilingEntry(K key) {
         Entry<K,V> p = root;
         while (p != null) {
+            // p.key>key，所以继续搜索左子树，找小一点的key
             int cmp = compare(key, p.key);
             if (cmp < 0) {
+                // 如果存在左子树，则p=p.left
                 if (p.left != null)
                     p = p.left;
                 else
+                    // 否则直接返回p
                     return p;
+                // p.key<key，则往右子树搜索，继续找大一点的key
             } else if (cmp > 0) {
+                // 若右子树存在，则p=p.right
                 if (p.right != null) {
                     p = p.right;
                 } else {
                     Entry<K,V> parent = p.parent;
                     Entry<K,V> ch = p;
+                    // 这里寻找右子树上最小的父节点 不存在则返回null
                     while (parent != null && ch == parent.right) {
                         ch = parent;
                         parent = parent.parent;
@@ -434,6 +450,7 @@ public class TreeMap<K,V>
                     return parent;
                 }
             } else
+                // 找到相等的key
                 return p;
         }
         return null;
@@ -444,15 +461,19 @@ public class TreeMap<K,V>
      * exists, returns the entry for the greatest key less than the specified
      * key; if no such entry exists, returns {@code null}.
      */
+    // 返回TreeMap中不大于key的最大的节点
     final Entry<K,V> getFloorEntry(K key) {
         Entry<K,V> p = root;
         while (p != null) {
+            // p.key<key，所以搜索右子树，找一个不大于key的最大节点
             int cmp = compare(key, p.key);
             if (cmp > 0) {
                 if (p.right != null)
                     p = p.right;
                 else
+                    // 如果右子树为空，则p就是最大节点
                     return p;
+            // p.key>key，则往左子树搜索，找小一点的key    
             } else if (cmp < 0) {
                 if (p.left != null) {
                     p = p.left;
@@ -555,9 +576,11 @@ public class TreeMap<K,V>
      */
     public V put(K key, V value) {
         Entry<K,V> t = root;
+        // 首先看根接单是否为null
         if (t == null) {
             compare(key, key); // type (and possibly null) check
-
+            
+            // 创建根节点
             root = new Entry<>(key, value, null);
             size = 1;
             modCount++;
@@ -2070,7 +2093,8 @@ public class TreeMap<K,V>
      * Node in the Tree.  Doubles as a means to pass key-value pairs back to
      * user (see Map.Entry).
      */
-
+    
+    // TreeMap的数据结构为红黑树
     static final class Entry<K,V> implements Map.Entry<K,V> {
         K key;
         V value;
