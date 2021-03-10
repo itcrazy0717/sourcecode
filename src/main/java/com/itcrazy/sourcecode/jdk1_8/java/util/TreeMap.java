@@ -2326,24 +2326,36 @@ public class TreeMap<K,V>
     	x.color = RED;
         // 新插入节点不是根节点或者新插入节点不是红色(这种情况不需要调整)
         while (x != null && x != root && x.parent.color == RED) {
-            // 新插入节点的父节点
+            // 新插入节点的父节点是祖父节点的左孩子
         	if (parentOf(x) == leftOf(parentOf(parentOf(x)))) {
-                Entry<K,V> y = rightOf(parentOf(parentOf(x)));
-                if (colorOf(y) == RED) {
+                // 获取新插入节点x的叔叔节点
+        	    Entry<K,V> y = rightOf(parentOf(parentOf(x)));
+                // 如果叔叔节点是红色
+        	    if (colorOf(y) == RED) {
+        	        // 将x的父节点设置为黑色
                     setColor(parentOf(x), BLACK);
+                    // 将x的叔叔节点设置为黑色
                     setColor(y, BLACK);
+                    // 将x的祖父节点设置为红色
                     setColor(parentOf(parentOf(x)), RED);
+                    // 将x执行其祖父节点，如果x的父节点为红色，则继续循环
                     x = parentOf(parentOf(x));
-                } else {
+                } else {  // 如果新插入x的叔叔节点是红色或缺少
+        	        // 并且插入节点x是父节点的右孩子
                     if (x == rightOf(parentOf(x))) {
+                        // 左旋父节点
                         x = parentOf(x);
                         rotateLeft(x);
                     }
+                    // 将x的父节点设置为黑色
                     setColor(parentOf(x), BLACK);
+                    // 将x的祖父节点设置为红色
                     setColor(parentOf(parentOf(x)), RED);
+                    // 右旋x的祖父节点
                     rotateRight(parentOf(parentOf(x)));
                 }
-            } else {
+            } else {   // 新插入节点的父节点是祖父节点的有右孩子，步骤类似，只是左旋变成了右旋
+        	  
                 Entry<K,V> y = leftOf(parentOf(parentOf(x)));
                 if (colorOf(y) == RED) {
                     setColor(parentOf(x), BLACK);
