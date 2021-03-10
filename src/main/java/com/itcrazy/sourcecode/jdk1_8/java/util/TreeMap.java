@@ -146,7 +146,7 @@ public class TreeMap<K,V>
     /**
      * The number of entries in the tree
      */
-    // 元素个数
+    // 元素个数,Entry的个数，也就是key-value的个数
     private transient int size = 0;
 
     /**
@@ -168,6 +168,7 @@ public class TreeMap<K,V>
      * {@code ClassCastException}.
      */
     // 默认不使用比较器
+    // 使用key的自然顺序进行排序
     public TreeMap() {
         comparator = null;
     }
@@ -576,38 +577,49 @@ public class TreeMap<K,V>
      */
     public V put(K key, V value) {
         Entry<K,V> t = root;
-        // 首先看根接单是否为null
+        // 如果根节点为空，则创建一个根节点
         if (t == null) {
             compare(key, key); // type (and possibly null) check
             
-            // 创建根节点
+            // 创建根节点，颜色默认为黑色
             root = new Entry<>(key, value, null);
             size = 1;
             modCount++;
             return null;
         }
+        // 记录比较结果
         int cmp;
         Entry<K,V> parent;
         // split comparator and comparable paths
-        Comparator<? super K> cpr = comparator;
-        if (cpr != null) {
-            do {
+        // 当前使用的比较器
+	    Comparator<? super K> cpr = comparator;
+        // 如果比较器不为空，则使用指定比较器
+	    if (cpr != null) {
+            // 循环查找key的位置，找出新节点的父节点
+	    	do {
+	    		// 记录上次循环的节点t
                 parent = t;
+                // 比较当前节点key和新插入key的大小
                 cmp = cpr.compare(key, t.key);
+                // t.key>key 则以当前节点左孩子节点为新的比较节点
                 if (cmp < 0)
                     t = t.left;
+                // t.key<key 则以当前节点右孩子节点为新的比较节点
                 else if (cmp > 0)
                     t = t.right;
                 else
+                	// 相等，则直接覆盖value
                     return t.setValue(value);
             } while (t != null);
         }
         else {
+        	// 比较器为空，则使用key进行比较，从这里可发现TreeMap不允许key为null
             if (key == null)
                 throw new NullPointerException();
             @SuppressWarnings("unchecked")
                 Comparable<? super K> k = (Comparable<? super K>) key;
             do {
+            	// 原理和上面一样
                 parent = t;
                 cmp = k.compareTo(t.key);
                 if (cmp < 0)
@@ -618,13 +630,18 @@ public class TreeMap<K,V>
                     return t.setValue(value);
             } while (t != null);
         }
+        // 找到父节点，创建新的节点
         Entry<K,V> e = new Entry<>(key, value, parent);
+        // 根据比较值放在左子树还是右子树
         if (cmp < 0)
             parent.left = e;
         else
             parent.right = e;
+        // 插入节点后，需要重新平衡红黑树
         fixAfterInsertion(e);
+        // 元素个数增加
         size++;
+        // 修改次数增加
         modCount++;
         return null;
     }
@@ -2098,9 +2115,13 @@ public class TreeMap<K,V>
     static final class Entry<K,V> implements Map.Entry<K,V> {
         K key;
         V value;
+        // 左子树
         Entry<K,V> left;
+        // 右子树
         Entry<K,V> right;
+        // 父节点
         Entry<K,V> parent;
+        // 颜色 默认为黑色
         boolean color = BLACK;
 
         /**
@@ -2299,11 +2320,14 @@ public class TreeMap<K,V>
     }
 
     /** From CLR */
+    // 新增节点后，需要调整红黑树，重新平衡
     private void fixAfterInsertion(Entry<K,V> x) {
-        x.color = RED;
-
+        // 先将节点颜色设置为红色
+    	x.color = RED;
+        // 新插入节点不是根节点或者新插入节点不是红色(这种情况不需要调整)
         while (x != null && x != root && x.parent.color == RED) {
-            if (parentOf(x) == leftOf(parentOf(parentOf(x)))) {
+            // 新插入节点的父节点
+        	if (parentOf(x) == leftOf(parentOf(parentOf(x)))) {
                 Entry<K,V> y = rightOf(parentOf(parentOf(x)));
                 if (colorOf(y) == RED) {
                     setColor(parentOf(x), BLACK);
