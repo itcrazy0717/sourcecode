@@ -2284,37 +2284,67 @@ public class TreeMap<K,V>
     }
 
     /** From CLR */
+    // 左旋操作，以p节点为支点进行左旋，将p变成左节点
     private void rotateLeft(Entry<K,V> p) {
+        // 当p不能为空
         if (p != null) {
+            // 取出p的右节点，赋值给r
             Entry<K,V> r = p.right;
+            // 将r的左节点设置成p的右节点
             p.right = r.left;
+            // 如果右节点的左节点不为空
             if (r.left != null)
+                // 则将右节点的父节点设置为p，构建红黑树
                 r.left.parent = p;
+            // 由于旋转，将右节点的父节点设置为p的父节点
             r.parent = p.parent;
+            // 如果p的父节点为空
             if (p.parent == null)
+                // 则r节点就为根节点
                 root = r;
+            // 如果父节点不为空，并且p在左子树位置
             else if (p.parent.left == p)
+                // 那么将r放置在原来p的左子树位置，左旋
                 p.parent.left = r;
             else
+                // 右子树则相反操作
                 p.parent.right = r;
+            // 到此处快完成旋转了
+            // 将r的左节点设置为p
             r.left = p;
+            // p的父节点设置为r完成旋转
             p.parent = r;
         }
     }
 
     /** From CLR */
+    // 右旋操作，以p节点为支点进行右旋，将p变成右节点
     private void rotateRight(Entry<K,V> p) {
         if (p != null) {
+            // 首先取出p的左节点
             Entry<K,V> l = p.left;
+            // 将左节点的右节点设置成p的左节点
             p.left = l.right;
-            if (l.right != null) l.right.parent = p;
+            // 如果左节点的右节点不为空
+            if (l.right != null)
+                // 则将左节点右节点的父节点设置p，进行调整
+                l.right.parent = p;
+            // 将左节点的父节点设置成p(旋转节点)的父节点
             l.parent = p.parent;
+            // p的父节点为空
             if (p.parent == null)
+                // 设置根节点为l(p节点的左节点)
                 root = l;
+            // 如果p的位置为右子树
             else if (p.parent.right == p)
+                // 则将l放置在原来p的右子树位置
                 p.parent.right = l;
+            // 否则为左子树，则将l放置在原来左子树位置
             else p.parent.left = l;
+            // 最后完成红黑树的拼接
+            // l的右节点设置为p
             l.right = p;
+            // p的父节点设置为l完成红黑树
             p.parent = l;
         }
     }
