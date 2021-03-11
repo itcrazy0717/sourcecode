@@ -2291,6 +2291,8 @@ public class TreeMap<K,V>
             // 取出p的右节点，赋值给r
             Entry<K,V> r = p.right;
             // 将r的左节点设置成p的右节点
+            // 因为p左旋后，原来p的右节点变成其父节点(r)，最终r的左节点是p节点，因此需要将r原来的左节点设置到p的右节点上
+            // 因为r为p的右节点其值比p节点大，因此需要将r的左节点设置到p的右节点上
             p.right = r.left;
             // 如果右节点的左节点不为空
             if (r.left != null)
@@ -2324,6 +2326,9 @@ public class TreeMap<K,V>
             // 首先取出p的左节点
             Entry<K,V> l = p.left;
             // 将左节点的右节点设置成p的左节点
+            // 右旋最终是p的左节点变成其父节点(l)，l的右节点是p节点，此时p的左节点空出来，由于最终l的右节点是p，
+            // 所以需要将l原来的右节点设置到p的左节点位置
+            // 此处需要多理解
             p.left = l.right;
             // 如果左节点的右节点不为空
             if (l.right != null)
