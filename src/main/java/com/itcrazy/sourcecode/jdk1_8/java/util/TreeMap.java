@@ -613,7 +613,8 @@ public class TreeMap<K,V>
             } while (t != null);
         }
         else {
-        	// 比较器为空，则使用key进行比较，从这里可发现TreeMap不允许key为null
+        	// 比较器为空，则使用key进行比较
+		    // 如果comparator不为null，则可以允许key为空，否则不允许
             if (key == null)
                 throw new NullPointerException();
             @SuppressWarnings("unchecked")
@@ -630,7 +631,7 @@ public class TreeMap<K,V>
                     return t.setValue(value);
             } while (t != null);
         }
-        // 找到父节点，创建新的节点
+        // 没有找到则创建新的节点
         Entry<K,V> e = new Entry<>(key, value, parent);
         // 根据比较值放在左子树还是右子树
         if (cmp < 0)
@@ -639,7 +640,7 @@ public class TreeMap<K,V>
             parent.right = e;
         // 插入节点后，需要重新平衡红黑树
         fixAfterInsertion(e);
-        // 元素个数增加
+        // 元素个数增加 红黑树不需要扩容
         size++;
         // 修改次数增加
         modCount++;
@@ -2291,8 +2292,8 @@ public class TreeMap<K,V>
             // 取出p的右节点，赋值给r
             Entry<K,V> r = p.right;
             // 将r的左节点设置成p的右节点
-            // 因为p左旋后，原来p的右节点变成其父节点(r)，最终r的左节点是p节点，因此需要将r原来的左节点设置到p的右节点上
-            // 因为r为p的右节点其值比p节点大，因此需要将r的左节点设置到p的右节点上
+            // 因为p左旋后，原来p的右节点变成其父节点(r)，最终r的左节点是p节点，此时r的左节点无处安置需要重新拼接
+	        // 而p的右节点有位置，直接拼接到其右节点上
             p.right = r.left;
             // 如果右节点的左节点不为空
             if (r.left != null)
@@ -2326,7 +2327,7 @@ public class TreeMap<K,V>
             // 首先取出p的左节点
             Entry<K,V> l = p.left;
             // 将左节点的右节点设置成p的左节点
-            // 右旋最终是p的左节点变成其父节点(l)，l的右节点是p节点，此时p的左节点空出来，由于最终l的右节点是p，
+            // 右旋最终是p的左节点变成其父节点(l)，l的右节点是p节点，最终l的右节点是p，l原来的右节点空闲，而p的左节点有位置
             // 所以需要将l原来的右节点设置到p的左节点位置
             // 此处需要多理解
             p.left = l.right;
@@ -2359,7 +2360,7 @@ public class TreeMap<K,V>
     private void fixAfterInsertion(Entry<K,V> x) {
         // 先将节点颜色设置为红色
     	x.color = RED;
-        // 新插入节点不是根节点或者新插入节点不是红色(这种情况不需要调整)
+        // 只有当心插入节点不是根节点且其父节点是红色时才需要平衡(违背特性4)
         while (x != null && x != root && x.parent.color == RED) {
             // 新插入节点的父节点是祖父节点的左孩子
         	if (parentOf(x) == leftOf(parentOf(parentOf(x)))) {
@@ -2373,15 +2374,18 @@ public class TreeMap<K,V>
                     setColor(y, BLACK);
                     // 将x的祖父节点设置为红色
                     setColor(parentOf(parentOf(x)), RED);
-                    // 将x执行其祖父节点，如果x的父节点为红色，则继续循环
+                    // 将祖父节点设置为新的当前节点继续判断
                     x = parentOf(parentOf(x));
-                } else {  // 如果新插入x的叔叔节点是红色或缺少
+                } else {  // 如果新插入x的叔叔节点是黑色或缺少
         	        // 并且插入节点x是父节点的右孩子
                     if (x == rightOf(parentOf(x))) {
-                        // 左旋父节点
+                        // 将父节点设置为当前节点
                         x = parentOf(x);
+                        // 以新的当前节点左旋
                         rotateLeft(x);
                     }
+                    // 如果当前节点为其父节点的左节点，在上面进行了左旋
+		            // 所以新的当前节点正好是其父节点的左节点
                     // 将x的父节点设置为黑色
                     setColor(parentOf(x), BLACK);
                     // 将x的祖父节点设置为红色
@@ -2390,24 +2394,39 @@ public class TreeMap<K,V>
                     rotateRight(parentOf(parentOf(x)));
                 }
             } else {   // 新插入节点的父节点是祖父节点的有右孩子，步骤类似，只是左旋变成了右旋
-        	  
+        	    // y是叔叔节点
                 Entry<K,V> y = leftOf(parentOf(parentOf(x)));
+                // 如果叔叔节点是红色
                 if (colorOf(y) == RED) {
+                	// 将父节点设置为黑色
                     setColor(parentOf(x), BLACK);
+                    // 将叔叔节点设置为黑色
                     setColor(y, BLACK);
+                    // 将祖父节点设置为红色
                     setColor(parentOf(parentOf(x)), RED);
+                    // 将祖父节点设置为新的当前节点
                     x = parentOf(parentOf(x));
                 } else {
+                	// 如果叔叔节点是黑色
+	                // 当前节点是其父节点的左节点
                     if (x == leftOf(parentOf(x))) {
-                        x = parentOf(x);
+                        // 将父节点设置为当前节点
+                    	x = parentOf(x);
+                    	// 以新节点进行右旋
                         rotateRight(x);
                     }
+                    // 上步右旋后，x也变成其父节点的右节点
+                    // 当前节点是其父节点的右节点
+	                // 设置父节点为黑色
                     setColor(parentOf(x), BLACK);
+                    // 祖父节点设置为红色
                     setColor(parentOf(parentOf(x)), RED);
+                    // 已祖父节点为支点进行左旋
                     rotateLeft(parentOf(parentOf(x)));
                 }
             }
         }
+        // 平衡完成后将根节点设置为黑色
         root.color = BLACK;
     }
 
