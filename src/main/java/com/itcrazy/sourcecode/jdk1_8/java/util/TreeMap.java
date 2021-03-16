@@ -667,7 +667,9 @@ public class TreeMap<K,V>
             return null;
 
         V oldValue = p.value;
+        // 删除节点
         deleteEntry(p);
+        // 返回删除的value
         return oldValue;
     }
 
@@ -2212,15 +2214,23 @@ public class TreeMap<K,V>
     /**
      * Returns the successor of the specified Entry, or null if no such.
      */
+    // 返回当前节点的后继节点
+    // 具体参考：https://blog.csdn.net/iwts_24/article/details/87165743
     static <K,V> Entry<K,V> successor(Entry<K,V> t) {
         if (t == null)
             return null;
+        // 右子树不为空
         else if (t.right != null) {
+            // 取出右子树
             Entry<K,V> p = t.right;
+            // 查找右子树中最左的孩子，也就是最小的节点，如果左子树为空，则直接返回右节点
             while (p.left != null)
                 p = p.left;
             return p;
         } else {
+            // 这里向上一直寻找
+            // 保证p不为null，并且ch一直是p的右节点，如果是则一直向上寻找，直到p==null都没找到，则说明该节点就为最大值
+            // 如果ch不是p的右节点，则该节点就是第一个大于p的节点
             Entry<K,V> p = t.parent;
             Entry<K,V> ch = t;
             while (p != null && ch == p.right) {
@@ -2434,23 +2444,34 @@ public class TreeMap<K,V>
      * Delete node p, and then rebalance the tree.
      */
     private void deleteEntry(Entry<K,V> p) {
+        // 修改次数增加
         modCount++;
+        // 元素个数减少
         size--;
 
         // If strictly internal, copy successor's element to p and then make p
         // point to successor.
+        // 如果p的存在左右节点
         if (p.left != null && p.right != null) {
+            // 找出当前节点的后继节点
             Entry<K,V> s = successor(p);
+            // 用后继节点替换当前节点
             p.key = s.key;
             p.value = s.value;
             p = s;
         } // p has 2 children
-
+        
+        // 到这里p可能是其后继节点（因为上步替换了），也可能是未被替换的节点(p左右节点有一个为空)
+        // （1）如果p是其后继节点，那么此处replacement一定为空，因为后继节点会一直找到右子树的最小值，该节点肯定不存在左右子树
+        //  (2) 如果p就是当前节点，则replacement有可能为空，也可能不为空，
+        //      如果不为空，说明p存在一个子节点，则直接替换掉p，再判断是否需要平衡
+        //      如果为空，则走后续流程                        
         // Start fixup at replacement node, if it exists.
         Entry<K,V> replacement = (p.left != null ? p.left : p.right);
-
+        // 如果replacement不为null的情况
         if (replacement != null) {
             // Link replacement to parent
+            // 这里进行链表的拼接，相当于删除了p 
             replacement.parent = p.parent;
             if (p.parent == null)
                 root = replacement;
@@ -2460,17 +2481,22 @@ public class TreeMap<K,V>
                 p.parent.right = replacement;
 
             // Null out links so they are OK to use by fixAfterDeletion.
+           // 将p节点置空
             p.left = p.right = p.parent = null;
 
             // Fix replacement
+            // 如果p是黑色则需要再平衡
             if (p.color == BLACK)
                 fixAfterDeletion(replacement);
         } else if (p.parent == null) { // return if we are the only node.
+            // 如果是根节点，则直接将根节点置空即可
             root = null;
         } else { //  No children. Use self as phantom replacement and unlink.
+            // p没有子节点
+            // 如果颜色为黑色，则需要平衡，因为只有删除黑色节点才需要平衡，黑色节点数减1，违背原则5
             if (p.color == BLACK)
                 fixAfterDeletion(p);
-
+            // 删除当前节点，因为p没有子节点，直接置空即可
             if (p.parent != null) {
                 if (p == p.parent.left)
                     p.parent.left = null;
