@@ -2508,6 +2508,7 @@ public class TreeMap<K,V>
     }
 
     /** From CLR */
+    // 删除元素后再平衡
     private void fixAfterDeletion(Entry<K,V> x) {
         while (x != root && colorOf(x) == BLACK) {
             if (x == leftOf(parentOf(x))) {
