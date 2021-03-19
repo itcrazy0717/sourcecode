@@ -2510,35 +2510,54 @@ public class TreeMap<K,V>
     /** From CLR */
     // 删除元素后再平衡
     private void fixAfterDeletion(Entry<K,V> x) {
-        while (x != root && colorOf(x) == BLACK) {
-            if (x == leftOf(parentOf(x))) {
+        // 如果当前节点不是根节点且其颜色为黑色才进行平衡
+    	while (x != root && colorOf(x) == BLACK) {
+            // 如果当前节点是其父节点的左节点
+    		if (x == leftOf(parentOf(x))) {
+                // 取出兄弟节点
                 Entry<K,V> sib = rightOf(parentOf(x));
-
+                // 如果兄弟节点为红色
                 if (colorOf(sib) == RED) {
-                    setColor(sib, BLACK);
+                    // 将兄弟节点设置为黑色
+                	setColor(sib, BLACK);
+                	// 将父节点设置为红色
                     setColor(parentOf(x), RED);
+                    // 以父节点为支点进行左旋
                     rotateLeft(parentOf(x));
+                    // 重置兄弟节点进入下一步
                     sib = rightOf(parentOf(x));
                 }
-
+                // 兄弟节点的左右节点都为黑色
                 if (colorOf(leftOf(sib))  == BLACK &&
                     colorOf(rightOf(sib)) == BLACK) {
-                    setColor(sib, RED);
+                    // 将兄弟节点标红
+                	setColor(sib, RED);
+                	// 将x的父节点作为当前节点进入下一次循环
                     x = parentOf(x);
                 } else {
+                	// 如果兄弟节点的右节点为黑色
                     if (colorOf(rightOf(sib)) == BLACK) {
-                        setColor(leftOf(sib), BLACK);
-                        setColor(sib, RED);
+                        // 将兄弟节点的左节点设置为黑色
+                    	setColor(leftOf(sib), BLACK);
+                        // 将兄弟节点设置为红色
+                    	setColor(sib, RED);
+                    	// 以兄弟节点为支点进行右旋
                         rotateRight(sib);
+                        // 重设兄弟节点
                         sib = rightOf(parentOf(x));
                     }
+                    // 将兄弟节点设置为其父节点的颜色
                     setColor(sib, colorOf(parentOf(x)));
+                    // 将父节点标黑
                     setColor(parentOf(x), BLACK);
+                    // 将兄弟节点的右节点标黑
                     setColor(rightOf(sib), BLACK);
+                    // 以父节点为支点进行左旋
                     rotateLeft(parentOf(x));
+                    // 将root作为当前节点，退出循环
                     x = root;
                 }
-            } else { // symmetric
+            } else { // symmetric // 镜像操作
                 Entry<K,V> sib = leftOf(parentOf(x));
 
                 if (colorOf(sib) == RED) {
