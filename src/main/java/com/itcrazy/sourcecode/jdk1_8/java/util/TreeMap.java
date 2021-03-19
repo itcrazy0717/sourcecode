@@ -1067,7 +1067,7 @@ public class TreeMap<K,V>
         int expectedModCount = modCount;
         for (Entry<K, V> e = getFirstEntry(); e != null; e = successor(e)) {
             action.accept(e.key, e.value);
-
+            // 快速失败
             if (expectedModCount != modCount) {
                 throw new ConcurrentModificationException();
             }
@@ -2193,6 +2193,7 @@ public class TreeMap<K,V>
      */
     final Entry<K,V> getFirstEntry() {
         Entry<K,V> p = root;
+        // 一直循环找到最小元素，现象二叉树的平铺即可
         if (p != null)
             while (p.left != null)
                 p = p.left;
@@ -2205,6 +2206,7 @@ public class TreeMap<K,V>
      */
     final Entry<K,V> getLastEntry() {
         Entry<K,V> p = root;
+        // 循环找到最右的元素，平铺现象即可
         if (p != null)
             while (p.right != null)
                 p = p.right;
@@ -2244,15 +2246,19 @@ public class TreeMap<K,V>
     /**
      * Returns the predecessor of the specified Entry, or null if no such.
      */
+    // 查找前置节点，与后继节点刚好相反
     static <K,V> Entry<K,V> predecessor(Entry<K,V> t) {
         if (t == null)
             return null;
+        // 如果左子树不为空
         else if (t.left != null) {
             Entry<K,V> p = t.left;
+            // 循环查找左边最右的元素
             while (p.right != null)
                 p = p.right;
             return p;
         } else {
+        	// 向上回溯，找到一个拐点即可，即找到ch为p的右节点即可
             Entry<K,V> p = t.parent;
             Entry<K,V> ch = t;
             while (p != null && ch == p.left) {
