@@ -232,7 +232,7 @@ public class LinkedHashMap<K,V>
      *
      * @serial
      */
-    // 是否更改元素的顺序 false-不更改也就是插入顺序 true-更改，会将访问过的元素放置在链表为，实现LRU(最近最少使用)
+    // 是否更改元素的顺序 false-不更改也就是插入顺序 true-更改，会将访问过的元素放置在链表尾，实现LRU(最近最少使用)
     // 默认为false，也就是插入顺序
     final boolean accessOrder;
 
