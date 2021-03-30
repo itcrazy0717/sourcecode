@@ -102,16 +102,19 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * items index for next take, poll, peek or remove
      */
+    // 用于take、poll、peek或remove方法
     int takeIndex;
 
     /**
      * items index for next put, offer, or add
      */
+    // 用于put、offer、add方法
     int putIndex;
 
     /**
      * Number of elements in the queue
      */
+    // 记录队列中元素个数
     int count;
 
     /*
@@ -127,11 +130,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Condition for waiting takes
      */
+    // 非空条件
     private final Condition notEmpty;
 
     /**
      * Condition for waiting puts
      */
+    // 未满条件
     private final Condition notFull;
 
     /**
@@ -178,9 +183,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         // 通过下标直接赋值
         final Object[] items = this.items;
         items[putIndex] = x;
+        // 如果插入索引已达到数组长度，则初始化putIndex，指向队列头
         if (++putIndex == items.length)
             putIndex = 0;
+        // 元素个数增加
         count++;
+        // 由于添加了元素，此时队列不为空，则需要唤醒take中阻塞的线程
         // 唤醒take中阻塞的线程
         notEmpty.signal();
     }
@@ -261,6 +269,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws IllegalArgumentException if {@code capacity < 1}
      */
     public ArrayBlockingQueue(int capacity) {
+        // 初始队列容量，容量一旦确定不能被更改
         this(capacity, false);
     }
 
@@ -277,8 +286,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     public ArrayBlockingQueue(int capacity, boolean fair) {
         if (capacity <= 0)
             throw new IllegalArgumentException();
+        // 容量一旦确定，不能修改
         this.items = new Object[capacity];
-        // 初始化一个lock锁，非空和非满公用一把锁
+        // 初始化一个非公平锁，非空和未满共用一把锁
         lock = new ReentrantLock(fair);
         notEmpty = lock.newCondition();
         notFull = lock.newCondition();
@@ -338,6 +348,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * 添加元素到队列中，如果队列满了，继续插入抛出异常IllegalStateException
      */
     public boolean add(E e) {
+        // 调用父类的add方法，其实父类的add方法中还是调用的offer方法
+        /**
+         * // 由于offer方法添加时，如果满了不会抛异常，只会返回false，这里通过false来进行异常的抛出，相当于重用
+         *  if (offer(e))
+         *             return true;
+         *         else
+         *             throw new IllegalStateException("Queue full");
+         */
         return super.add(e);
     }
 
@@ -359,6 +377,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             // 队列已满，直接返回false
+            // add方法中抛异常是通过此处的false实现
             if (count == items.length)
                 return false;
             else {
