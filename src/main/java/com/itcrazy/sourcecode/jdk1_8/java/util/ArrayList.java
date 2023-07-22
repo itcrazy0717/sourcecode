@@ -237,7 +237,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @param minCapacity the desired minimum capacity
      */
     public void ensureCapacity(int minCapacity) {
-        // 如果数组为空，则为0，否则为默认值10
+        // 如果数组不为空，则为0，否则为默认值10
         int minExpand = (elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA)
                         // any size if not default element table
                         ? 0
