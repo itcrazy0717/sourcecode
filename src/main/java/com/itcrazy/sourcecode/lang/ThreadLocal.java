@@ -83,6 +83,7 @@ public class ThreadLocal<T> {
      * less common cases.
      */
     // 每初始化一个threadLocal，其hashCode就会增加0x61c88647
+	// 注意，每个ThreadLocal的threadLocalHashCode值是固定的，因为这里使用的final来进行修饰，一旦实例化就不在改变
     private final int threadLocalHashCode = nextHashCode();
 
     /**
@@ -103,6 +104,7 @@ public class ThreadLocal<T> {
      * Returns the next hash code.
      */
     private static int nextHashCode() {
+    	// 此处使用getAndAdd类似于i++，后加
         return nextHashCode.getAndAdd(HASH_INCREMENT);
     }
 
@@ -358,6 +360,7 @@ public class ThreadLocal<T> {
         /**
          * Increment i modulo len.
          */
+        // 获取下一个位置的索引
         private static int nextIndex(int i, int len) {
             return ((i + 1 < len) ? i + 1 : 0);
         }
@@ -375,10 +378,16 @@ public class ThreadLocal<T> {
          * one when we have at least one entry to put in it.
          */
         ThreadLocalMap(ThreadLocal<?> firstKey, Object firstValue) {
-            table = new Entry[INITIAL_CAPACITY];
-            int i = firstKey.threadLocalHashCode & (INITIAL_CAPACITY - 1);
-            table[i] = new Entry(firstKey, firstValue);
+            // 初始化数组，大小为16
+        	table = new Entry[INITIAL_CAPACITY];
+            // 通过ThreadLocal的threadLocalHashCode属性来确定元素桶的位置
+	        // 注意threadLocalHashCode每次都会加上0x61c88647，进行均匀的哈希分布
+	        // 有点类似HashMap的桶分布
+        	int i = firstKey.threadLocalHashCode & (INITIAL_CAPACITY - 1);
+            // 在相应位置初始化一个Entry
+        	table[i] = new Entry(firstKey, firstValue);
             size = 1;
+            // 设置扩容因子
             setThreshold(INITIAL_CAPACITY);
         }
 
@@ -479,21 +488,25 @@ public class ThreadLocal<T> {
 
             Entry[] tab = table;
             int len = tab.length;
-            // 根据key的hash值，确定散列的位置，注意这里的hashcode会增加
+            // 根据key的hash值，确定散列的位置
+	        // 由于key是ThreadLocal对象，当ThreadLocal对象一创建其threadLocalHashCode就会固定下来
             int i = key.threadLocalHashCode & (len-1);
 
+            // 循环取出数组中的元素，如果当前位置的元素不为空，需要继续向下寻找
             for (Entry e = tab[i];
                  e != null;
                  e = tab[i = nextIndex(i, len)]) {
-                // 取出对应位置上的值
+                // 取出对应位置上的key值
                 ThreadLocal<?> k = e.get();
-                // 如果和key相等，则重新设置value
+                // 如果当前位置上的key值与待设置的key相等，则重新设置value
+	            // 因为存在一个线程使用多个ThreadLocal
                 if (k == key) {
                     e.value = value;
                     return;
                 }
                 
                 // key为null，则重新寻找下一个位置
+	            // 因为key为弱引用，因此可能为空
                 if (k == null) {
                     replaceStaleEntry(key, value, i);
                     return;
@@ -503,6 +516,7 @@ public class ThreadLocal<T> {
             tab[i] = new Entry(key, value);
             int sz = ++size;
             // 通过cleanSomeSlots方法清除key为null的value值
+	        // 如果不存在key为null的元素并且达到了扩容点，则进行扩容
             if (!cleanSomeSlots(i, sz) && sz >= threshold)
                 rehash();
         }
