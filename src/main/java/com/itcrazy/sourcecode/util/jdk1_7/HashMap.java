@@ -600,16 +600,38 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * Transfers all entries from current table to newTable.
      */
     void transfer(Entry[] newTable, boolean rehash) {
+        // 扩展后的长度
         int newCapacity = newTable.length;
+        // 遍历原数组
         for (Entry<K,V> e : table) {
             while(null != e) {
+                /**
+                 * 扩容原理：
+                 * 比如当前桶中链表为1->5->7
+                 * 1.记录头元素的next元素 next=5
+                 * 2.截断头元素 1->next=null
+                 * 3.设置1到新桶的第一个位置
+                 * 依次循环：
+                 * next=7
+                 * 5.next=1
+                 * 新桶位置为5
+                 * 依次类推就是头插法
+                 * 最终调转链表顺序
+                 */
+                // 暂存e的next元素
                 Entry<K,V> next = e.next;
+                // 是否要再hash
                 if (rehash) {
                     e.hash = null == e.key ? 0 : hash(e.key);
                 }
+                // 获取元素在新数组的位置
                 int i = indexFor(e.hash, newCapacity);
+                // 将桶的第一个元素设置到e的next位置，头插法
                 e.next = newTable[i];
+                // 设置桶的第一个元素为e
                 newTable[i] = e;
+                // 上面两步其实就是实现来链表的翻转，对于链表的操作，通过画图很很容易理解
+                // 循环下一个元素
                 e = next;
             }
         }
