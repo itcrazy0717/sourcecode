@@ -42,7 +42,7 @@ import java.util.function.Supplier;
  * A thread's id is assigned the first time it invokes {@code ThreadId.get()}
  * and remains unchanged on subsequent calls.
  * <pre>
- * import java.util.concurrent.atomic.AtomicInteger;
+ * import java.jdk1_8.concurrent.atomic.AtomicInteger;
  *
  * public class ThreadId {
  *     // Atomic integer containing the next thread ID to be assigned

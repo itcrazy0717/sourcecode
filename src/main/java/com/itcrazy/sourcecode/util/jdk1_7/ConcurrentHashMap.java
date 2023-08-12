@@ -1,4 +1,4 @@
-package com.itcrazy.sourcecode.util.concurrent.jdk1_7;/*
+package com.itcrazy.sourcecode.util.jdk1_7;/*
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
  *

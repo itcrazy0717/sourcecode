@@ -221,9 +221,9 @@ class Thread implements Runnable {
 
     /**
      * The argument supplied to the current call to
-     * java.util.concurrent.locks.LockSupport.park.
-     * Set by (private) java.util.concurrent.locks.LockSupport.setBlocker
-     * Accessed using java.util.concurrent.locks.LockSupport.getBlocker
+     * java.jdk1_8.concurrent.locks.LockSupport.park.
+     * Set by (private) java.jdk1_8.concurrent.locks.LockSupport.setBlocker
+     * Accessed using java.jdk1_8.concurrent.locks.LockSupport.getBlocker
      */
     volatile Object parkBlocker;
 
@@ -2032,7 +2032,7 @@ class Thread implements Runnable {
 
 
     // The following three initially uninitialized fields are exclusively
-    // managed by class java.util.concurrent.ThreadLocalRandom. These
+    // managed by class java.jdk1_8.concurrent.ThreadLocalRandom. These
     // fields are used to build the high-performance PRNGs in the
     // concurrent code, and we can not risk accidental false sharing.
     // Hence, the fields are isolated with @Contended.

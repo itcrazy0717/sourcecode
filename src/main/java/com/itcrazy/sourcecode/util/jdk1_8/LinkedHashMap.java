@@ -23,7 +23,7 @@
  *
  */
 
-package com.itcrazy.sourcecode.jdk1_8.java.util;
+package com.itcrazy.sourcecode.util.jdk1_8;
 
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
@@ -307,7 +307,7 @@ public class LinkedHashMap<K,V>
         return t;
     }
 
-    // 移除元素java.util.HashMap.afterNodeRemoval 847行 在移除元素时被调用
+    // 移除元素java.jdk1_8.HashMap.afterNodeRemoval 847行 在移除元素时被调用
     void afterNodeRemoval(Node<K,V> e) { // unlink
         // 取出e的前驱和后置节点
     	Entry<K,V> p =
@@ -325,7 +325,7 @@ public class LinkedHashMap<K,V>
             a.before = b;
     }
 
-    // 这里在put方法中进行调用java.util.HashMap.afterNodeInsertion 664行，在插入元素后判断是否要移除最老元素
+    // 这里在put方法中进行调用java.jdk1_8.HashMap.afterNodeInsertion 664行，在插入元素后判断是否要移除最老元素
     void afterNodeInsertion(boolean evict) { // possibly remove eldest
         Entry<K,V> first;
         // 注意removeEldestEntry方法默认返回的是false，也就是不删除最老元素
@@ -339,7 +339,7 @@ public class LinkedHashMap<K,V>
         }
     }
 
-    // put方法中会调用该函数，LinkedHashMap中get方法也会调用该函数 java.util.HashMap.afterNodeAccess 657行
+    // put方法中会调用该函数，LinkedHashMap中get方法也会调用该函数 java.jdk1_8.HashMap.afterNodeAccess 657行
 	// 将元素调整到链表尾
     void afterNodeAccess(Node<K,V> e) { // move node to last
         Entry<K,V> last;

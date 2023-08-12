@@ -2097,7 +2097,7 @@ public final class String
 
     /**
      * Tells whether or not this string matches the given <a
-     * href="../util/regex/Pattern.html#sum">regular expression</a>.
+     * href="../jdk1_8/regex/Pattern.html#sum">regular expression</a>.
      *
      * <p> An invocation of this method of the form
      * <i>str</i>{@code .matches(}<i>regex</i>{@code )} yields exactly the
@@ -2140,7 +2140,7 @@ public final class String
 
     /**
      * Replaces the first substring of this string that matches the given <a
-     * href="../util/regex/Pattern.html#sum">regular expression</a> with the
+     * href="../jdk1_8/regex/Pattern.html#sum">regular expression</a> with the
      * given replacement.
      *
      * <p> An invocation of this method of the form
@@ -2185,7 +2185,7 @@ public final class String
 
     /**
      * Replaces each substring of this string that matches the given <a
-     * href="../util/regex/Pattern.html#sum">regular expression</a> with the
+     * href="../jdk1_8/regex/Pattern.html#sum">regular expression</a> with the
      * given replacement.
      *
      * <p> An invocation of this method of the form
@@ -2247,7 +2247,7 @@ public final class String
 
     /**
      * Splits this string around matches of the given
-     * <a href="../util/regex/Pattern.html#sum">regular expression</a>.
+     * <a href="../jdk1_8/regex/Pattern.html#sum">regular expression</a>.
      *
      * <p> The array returned by this method contains each substring of this
      * string that is terminated by another substring that matches the given
@@ -2387,7 +2387,7 @@ public final class String
 
     /**
      * Splits this string around matches of the given <a
-     * href="../util/regex/Pattern.html#sum">regular expression</a>.
+     * href="../jdk1_8/regex/Pattern.html#sum">regular expression</a>.
      *
      * <p> This method works as if by invoking the two-argument {@link
      * #split(String, int) split} method with the given expression and a limit
@@ -2914,7 +2914,7 @@ public final class String
      * Locale#getDefault() Locale.getDefault()}.
      *
      * @param  format
-     *         A <a href="../util/Formatter.html#syntax">format string</a>
+     *         A <a href="../jdk1_8/Formatter.html#syntax">format string</a>
      *
      * @param  args
      *         Arguments referenced by the format specifiers in the format
@@ -2925,7 +2925,7 @@ public final class String
      *         <cite>The Java&trade; Virtual Machine Specification</cite>.
      *         The behaviour on a
      *         {@code null} argument depends on the <a
-     *         href="../util/Formatter.html#syntax">conversion</a>.
+     *         href="../jdk1_8/Formatter.html#syntax">conversion</a>.
      *
      * @throws  java.util.IllegalFormatException
      *          If a format string contains an illegal syntax, a format
@@ -2933,7 +2933,7 @@ public final class String
      *          insufficient arguments given the format string, or other
      *          illegal conditions.  For specification of all possible
      *          formatting errors, see the <a
-     *          href="../util/Formatter.html#detail">Details</a> section of the
+     *          href="../jdk1_8/Formatter.html#detail">Details</a> section of the
      *          formatter class specification.
      *
      * @return  A formatted string
@@ -2955,7 +2955,7 @@ public final class String
      *         is applied.
      *
      * @param  format
-     *         A <a href="../util/Formatter.html#syntax">format string</a>
+     *         A <a href="../jdk1_8/Formatter.html#syntax">format string</a>
      *
      * @param  args
      *         Arguments referenced by the format specifiers in the format
@@ -2966,7 +2966,7 @@ public final class String
      *         <cite>The Java&trade; Virtual Machine Specification</cite>.
      *         The behaviour on a
      *         {@code null} argument depends on the
-     *         <a href="../util/Formatter.html#syntax">conversion</a>.
+     *         <a href="../jdk1_8/Formatter.html#syntax">conversion</a>.
      *
      * @throws  java.util.IllegalFormatException
      *          If a format string contains an illegal syntax, a format
@@ -2974,7 +2974,7 @@ public final class String
      *          insufficient arguments given the format string, or other
      *          illegal conditions.  For specification of all possible
      *          formatting errors, see the <a
-     *          href="../util/Formatter.html#detail">Details</a> section of the
+     *          href="../jdk1_8/Formatter.html#detail">Details</a> section of the
      *          formatter class specification
      *
      * @return  A formatted string

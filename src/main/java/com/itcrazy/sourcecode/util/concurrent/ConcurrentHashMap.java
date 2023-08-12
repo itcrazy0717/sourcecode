@@ -275,7 +275,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * concurrent readability (typically method get(), but also
      * iterators and related methods) while minimizing update
      * contention. Secondary goals are to keep space consumption about
-     * the same or better than java.util.HashMap, and to support high
+     * the same or better than java.jdk1_8.HashMap, and to support high
      * initial insertion rates on an empty table by many threads.
      *
      * This map usually acts as a binned (bucketed) hash table.  Each

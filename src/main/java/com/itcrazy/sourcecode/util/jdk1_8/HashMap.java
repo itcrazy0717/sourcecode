@@ -23,7 +23,7 @@
  *
  */
 
-package com.itcrazy.sourcecode.jdk1_8.java.util;
+package com.itcrazy.sourcecode.util.jdk1_8;
 
 import java.io.IOException;
 import java.io.InvalidObjectException;
@@ -161,7 +161,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * This map usually acts as a binned (bucketed) hash table, but
      * when bins get too large, they are transformed into bins of
      * TreeNodes, each structured similarly to those in
-     * java.util.TreeMap. Most methods try to use normal bins, but
+     * java.jdk1_8.TreeMap. Most methods try to use normal bins, but
      * relay to TreeNode methods when applicable (simply by checking
      * instanceof a node).  Bins of TreeNodes may be traversed and
      * used like any others, but additionally support faster lookup
@@ -1028,7 +1028,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     // 获取key的集合
     // 注意Set集合只有通过遍历才能获取得到，但是在idea调试的时候ks确有值，是因为idea会默认调用类的toString方法
-    // 这里会调用java.util.AbstractCollection.toString方法显示了元素的个数，所以这里会发现有值
+    // 这里会调用java.jdk1_8.AbstractCollection.toString方法显示了元素的个数，所以这里会发现有值
     // 具体参考：https://blog.csdn.net/li_canhui/article/details/85051250
     public Set<K> keySet() {
         Set<K> ks = keySet;
