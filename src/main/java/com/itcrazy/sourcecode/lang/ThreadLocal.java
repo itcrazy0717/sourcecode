@@ -316,6 +316,7 @@ public class ThreadLocal<T> {
          * as "stale entries" in the code that follows.
          */
         // 注意ThreadLocalMap的Entry继承至WeakReference
+        // 弱引用    
         static class Entry extends WeakReference<ThreadLocal<?>> {
             /** The value associated with this ThreadLocal. */
             Object value;
