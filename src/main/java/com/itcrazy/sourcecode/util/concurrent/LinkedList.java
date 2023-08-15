@@ -23,7 +23,7 @@
  *
  */
 
-package com.itcrazy.sourcecode.util.jdk1_8;
+package com.itcrazy.sourcecode.util.concurrent;
 
 /**
  * Doubly-linked list implementation of the {@code List} and {@code Deque}

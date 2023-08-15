@@ -36,7 +36,7 @@
 package com.itcrazy.sourcecode.util.concurrent;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.AbstractQueuedSynchronizer;
+import com.itcrazy.sourcecode.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 /**
  * A synchronization aid that allows one or more threads to wait until
