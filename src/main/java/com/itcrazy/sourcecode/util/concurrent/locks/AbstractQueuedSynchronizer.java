@@ -34,10 +34,11 @@
  */
 
 package com.itcrazy.sourcecode.util.concurrent.locks;
-import java.util.concurrent.TimeUnit;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractOwnableSynchronizer;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -404,7 +405,7 @@ public abstract class AbstractQueuedSynchronizer
         /**
          * Status field, taking on only the values:
          *               
-         *               -1 只要前置节点释放锁，就会通知waitStatus为SINGAL状态的后续节点线程
+         *               -1 只要前序节点释放锁，就会通知waitStatus为SINGAL状态的后续节点线程
          *   SIGNAL:     The successor of this node is (or will soon be)
          *               blocked (via park), so the current node must
          *               unpark its successor when it releases or
@@ -685,6 +686,7 @@ public abstract class AbstractQueuedSynchronizer
      *
      * @param node the node
      */
+    // 缓存处于等待队列中的线程
     private void unparkSuccessor(Node node) {
         /*
          * If status is negative (i.e., possibly needing signal) try
@@ -873,7 +875,7 @@ public abstract class AbstractQueuedSynchronizer
         // 注意 Requires that pred == node.prev.
         // waitStatus默认为0
         int ws = pred.waitStatus;
-        // 如果前置节点waitStatus为SIGNAL，则意味着只需要等待其他前置节点的线程释放锁就可以
+        // 如果前置节点waitStatus为SIGNAL，则意味着只需要等待其他前序节点的线程释放锁就可以
         if (ws == Node.SIGNAL)
             /*
              * This node has already set status asking a release
@@ -954,7 +956,7 @@ public abstract class AbstractQueuedSynchronizer
             boolean interrupted = false;
             // 自旋操作，尝试获取锁操作
             for (;;) {
-                // 获取当前节点的前一个节点
+                // 获取当前节点的前序节点
                 final Node p = node.predecessor();
                 // 再次插队
                 // 如果p为head节点，说明有资格去争抢锁
@@ -1657,6 +1659,7 @@ public abstract class AbstractQueuedSynchronizer
      *         is at the head of the queue or the queue is empty
      * @since 1.7
      */
+    // 判断是否有线程在队列中
     public final boolean hasQueuedPredecessors() {
         // The correctness of this depends on head being initialized
         // before tail and on head.next being accurate if the current

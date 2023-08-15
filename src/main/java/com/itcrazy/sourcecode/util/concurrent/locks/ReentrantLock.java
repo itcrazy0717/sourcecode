@@ -34,11 +34,13 @@
  */
 
 package com.itcrazy.sourcecode.util.concurrent.locks;
-import java.util.concurrent.TimeUnit;
+
 import java.util.Collection;
-import java.util.concurrent.locks.AbstractQueuedSynchronizer;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
+
+import com.itcrazy.sourcecode.lang.Thread;
 
 /**
  * A reentrant mutual exclusion {@link Lock} with the same basic
@@ -161,7 +163,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             if (Thread.currentThread() != getExclusiveOwnerThread())
                 throw new IllegalMonitorStateException();
             boolean free = false;
-            // 可以释放锁了
+            // 只有当state为0时，才表示锁已释放成功
             if (c == 0) {
                 free = true;
                 // 将exclusiveOwnerThread设置为null
@@ -395,6 +397,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *         thread; and {@code false} otherwise
      */
     public boolean tryLock() {
+    	// 默认是通过非公平的方式获取锁
         return sync.nonfairTryAcquire(1);
     }
 

@@ -1,1 +1,0 @@
-注：ReentrantLock(非公平锁)各阶段状态图中ThreadC的waitStatus=0
