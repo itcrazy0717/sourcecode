@@ -299,6 +299,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * @param fair {@code true} if this lock should use a fair ordering policy
      */
     public ReentrantLock(boolean fair) {
+        // 通过构造函数来创建公平与非公平锁
+        // 当fair为true的时候为公平锁，否则为非公平锁
         sync = fair ? new FairSync() : new NonfairSync();
     }
 
@@ -316,6 +318,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * purposes and lies dormant until the lock has been acquired,
      * at which time the lock hold count is set to one.
      */
+    // 不会抛出中断异常，会自旋等待
     public void lock() {
         sync.lock();
     }
@@ -366,6 +369,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *
      * @throws InterruptedException if the current thread is interrupted
      */
+    // 线程中断会抛出异常
     public void lockInterruptibly() throws InterruptedException {
         sync.acquireInterruptibly(1);
     }
