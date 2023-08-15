@@ -24,7 +24,8 @@
  */
 
 package com.itcrazy.sourcecode.lang;
-import java.lang.ref.*;
+
+import java.lang.ref.WeakReference;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -160,7 +161,7 @@ public class ThreadLocal<T> {
      * @return the current thread's value of this thread-local
      */
     public T get() {
-        java.lang.Thread t = java.lang.Thread.currentThread();
+        Thread t = Thread.currentThread();
         // 获取当前线程的ThreadLocalMap
         // 由于每个线程都有ThreadLocalMap的存在，实现了线程的隔离性
         ThreadLocalMap map = getMap(t);
@@ -185,7 +186,7 @@ public class ThreadLocal<T> {
      */
     private T setInitialValue() {
         T value = initialValue();
-        java.lang.Thread t = java.lang.Thread.currentThread();
+        Thread t = Thread.currentThread();
         ThreadLocalMap map = getMap(t);
         if (map != null)
             map.set(this, value);
@@ -205,7 +206,7 @@ public class ThreadLocal<T> {
      */
     public void set(T value) {
         // 获取当前线程
-        java.lang.Thread t = java.lang.Thread.currentThread();
+        Thread t = Thread.currentThread();
         // 获取ThreadLocalMap
         ThreadLocalMap map = getMap(t);
         // 如果不为空，则设置其值
@@ -227,7 +228,7 @@ public class ThreadLocal<T> {
      * @since 1.5
      */
      public void remove() {
-         ThreadLocalMap m = getMap(java.lang.Thread.currentThread());
+         ThreadLocalMap m = getMap(Thread.currentThread());
          if (m != null)
              m.remove(this);
      }
@@ -239,7 +240,7 @@ public class ThreadLocal<T> {
      * @param  t the current thread
      * @return the map
      */
-    ThreadLocalMap getMap(java.lang.Thread t) {
+    ThreadLocalMap getMap(Thread t) {
         return t.threadLocals;
     }
 
@@ -250,7 +251,7 @@ public class ThreadLocal<T> {
      * @param t the current thread
      * @param firstValue value for the initial entry of the map
      */
-    void createMap(java.lang.Thread t, T firstValue) {
+    void createMap(Thread t, T firstValue) {
         t.threadLocals = new ThreadLocalMap(this, firstValue);
     }
 
