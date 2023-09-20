@@ -547,7 +547,7 @@ public abstract class AbstractQueuedSynchronizer
      * The synchronization state.
      * 同步状态
      * 当state=0时，表示无锁状态
-     * 当state>0时，表示已经有线程获得了锁，也就是state=1，但是因为ReentrantLock允许重入
+     * 当state>0时，表示已经有线程获得了锁，但是因为ReentrantLock允许重入
      * 所以同一个线程多次获取同步锁的时候state会递增，比如重入5次，state就等于5，那么在释放锁的时候
      * 同样需要释放5次直到state=0其他线程才有资格获取锁
      */
