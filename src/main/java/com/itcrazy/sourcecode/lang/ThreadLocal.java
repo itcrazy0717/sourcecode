@@ -84,7 +84,7 @@ public class ThreadLocal<T> {
      * less common cases.
      */
     // 每初始化一个threadLocal，其hashCode就会增加0x61c88647
-	// 注意，每个ThreadLocal的threadLocalHashCode值是固定的，因为这里使用的final来进行修饰，一旦实例化就不在改变
+	// 注意，每个ThreadLocal的threadLocalHashCode值是固定的，因为这里使用的final来进行修饰，一旦实例化就不再进行改变
     private final int threadLocalHashCode = nextHashCode();
 
     /**
@@ -383,7 +383,6 @@ public class ThreadLocal<T> {
             // 初始化数组，大小为16
         	table = new Entry[INITIAL_CAPACITY];
             // 通过ThreadLocal的threadLocalHashCode属性来确定元素桶的位置
-	        // 注意threadLocalHashCode每次都会加上0x61c88647，进行均匀的哈希分布
 	        // 有点类似HashMap的桶分布
         	int i = firstKey.threadLocalHashCode & (INITIAL_CAPACITY - 1);
             // 在相应位置初始化一个Entry
