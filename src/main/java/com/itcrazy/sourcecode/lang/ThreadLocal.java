@@ -84,7 +84,7 @@ public class ThreadLocal<T> {
      * less common cases.
      */
     // 每初始化一个threadLocal，其hashCode就会增加0x61c88647
-	// 注意，每个ThreadLocal的threadLocalHashCode值是固定的，因为这里使用的final来进行修饰，一旦实例化就不再进行改变
+	// 注意此处使用的final来进行修饰，一旦实例化就不再进行改变
     private final int threadLocalHashCode = nextHashCode();
 
     /**
@@ -105,7 +105,7 @@ public class ThreadLocal<T> {
      * Returns the next hash code.
      */
     private static int nextHashCode() {
-    	// 此处使用getAndAdd类似于i++，后加
+    	// 此处使用getAndAdd类似于i++，后加，返回的是运算前的值
         return nextHashCode.getAndAdd(HASH_INCREMENT);
     }
 
@@ -187,10 +187,12 @@ public class ThreadLocal<T> {
     private T setInitialValue() {
         T value = initialValue();
         Thread t = Thread.currentThread();
+        // 获取当前线程的ThreadLocalMap
         ThreadLocalMap map = getMap(t);
         if (map != null)
             map.set(this, value);
         else
+            // ThreadLocalMap为空，则进行创建
             createMap(t, value);
         return value;
     }
@@ -214,6 +216,7 @@ public class ThreadLocal<T> {
             map.set(this, value);
         else
             createMap(t, value);
+        // 从此处可看出ThreadLocal为懒加载
     }
 
     /**
@@ -252,6 +255,7 @@ public class ThreadLocal<T> {
      * @param firstValue value for the initial entry of the map
      */
     void createMap(Thread t, T firstValue) {
+        // 注意，此处的key为当前ThreadLocal对象
         t.threadLocals = new ThreadLocalMap(this, firstValue);
     }
 
@@ -384,6 +388,7 @@ public class ThreadLocal<T> {
         	table = new Entry[INITIAL_CAPACITY];
             // 通过ThreadLocal的threadLocalHashCode属性来确定元素桶的位置
 	        // 有点类似HashMap的桶分布
+            // 每次构建ThreadLocalMap，其threadLocalHashCode值都会进行改变
         	int i = firstKey.threadLocalHashCode & (INITIAL_CAPACITY - 1);
             // 在相应位置初始化一个Entry
         	table[i] = new Entry(firstKey, firstValue);
