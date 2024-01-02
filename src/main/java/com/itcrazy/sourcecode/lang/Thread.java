@@ -28,14 +28,15 @@ package com.itcrazy.sourcecode.lang;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
-import java.security.AccessController;
 import java.security.AccessControlContext;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.LockSupport;
+
 import sun.nio.ch.Interruptible;
 import sun.reflect.CallerSensitive;
 import sun.reflect.Reflection;
@@ -720,6 +721,7 @@ public class Thread implements Runnable {
 
         boolean started = false;
         try {
+        	// 启动一个线程，这里是一个native方法
             start0();
             started = true;
         } finally {
@@ -920,7 +922,7 @@ public class Thread implements Runnable {
     public void interrupt() {
         if (this != Thread.currentThread())
             checkAccess();
-
+        // 注意此处加锁，线程安全
         synchronized (blockerLock) {
             Interruptible b = blocker;
             if (b != null) {
@@ -1748,6 +1750,7 @@ public class Thread implements Runnable {
      * @since   1.5
      * @see #getState
      */
+    // 线程的状态 6种
     public enum State {
         /**
          * Thread state for a thread which has not yet started.
