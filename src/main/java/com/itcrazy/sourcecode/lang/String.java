@@ -111,7 +111,7 @@ import java.util.regex.PatternSyntaxException;
 public final class String
     implements java.io.Serializable, Comparable<String>, CharSequence {
     /** The value is used for character storage. */
-    // 利用数组进行数据的存储 
+    // 利用数组进行数据的存储，注意此处被final修饰，也就是String为不可变对象
     private final char value[];
 
     /** Cache the hash code for the string */
@@ -975,6 +975,7 @@ public final class String
      * @see  #compareTo(String)
      * @see  #equalsIgnoreCase(String)
      */
+    // equals方法首先判断是否为相同引用，如果是直接返回true，否则循环判断内容
     public boolean equals(Object anObject) {
         // 对象引用相同，直接返回true
     	if (this == anObject) {
