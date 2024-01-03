@@ -180,6 +180,7 @@ public class Thread implements Runnable {
     /* ThreadLocal values pertaining to this thread. This map is maintained
      * by the ThreadLocal class. */
     // 这里就是ThreadLocal中用来存储值的对象
+	// ThreadLocal中的内部类
     ThreadLocal.ThreadLocalMap threadLocals = null;
 
     /*

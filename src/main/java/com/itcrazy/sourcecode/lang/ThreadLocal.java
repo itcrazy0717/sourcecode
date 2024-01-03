@@ -329,6 +329,7 @@ public class ThreadLocal<T> {
             Entry(ThreadLocal<?> k, Object v) {
                 // 其key是保存在WeakReference，为弱引用，当没有外部强引用时，会被GC回收掉
                 super(k);
+                // 此处只是key为弱引用，value仍然是强引用
                 value = v;
             }
         }
@@ -498,7 +499,7 @@ public class ThreadLocal<T> {
 	        // 由于key是ThreadLocal对象，当ThreadLocal对象一创建其threadLocalHashCode就会固定下来
             int i = key.threadLocalHashCode & (len-1);
 
-            // 循环取出数组中的元素，如果当前位置的元素不为空，需要继续向下寻找
+            // 循环寻找对象进行设值
             for (Entry e = tab[i];
                  e != null;
                  e = tab[i = nextIndex(i, len)]) {
