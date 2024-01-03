@@ -24,7 +24,12 @@
  */
 
 package com.itcrazy.sourcecode.jdk1_7;
-import java.io.*;
+
+import java.io.IOException;
+import java.io.InvalidObjectException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.AbstractCollection;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -372,6 +377,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             return sun.misc.Hashing.stringHash32((String) k);
         }
 
+        // 进行位运算，这样增加扰动值，为了尽量避免hash冲突
         h ^= k.hashCode();
 
         // This function ensures that hashCodes that differ only by
@@ -384,6 +390,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /**
      * Returns index for hash code h.
      */
+    // 计算元素桶的位置
     static int indexFor(int h, int length) {
         // assert Integer.bitCount(length) == 1 : "length must be a non-zero power of 2";
         return h & (length-1);
@@ -425,8 +432,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * @see #put(Object, Object)
      */
     public V get(Object key) {
-        if (key == null)
+        // HashMap是允许key为null的
+    	if (key == null)
             return getForNullKey();
+    	// 通过key获取值
         Entry<K,V> entry = getEntry(key);
 
         return null == entry ? null : entry.getValue();
@@ -443,6 +452,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         if (size == 0) {
             return null;
         }
+        // 遍历寻找key为null的元素
         for (Entry<K,V> e = table[0]; e != null; e = e.next) {
             if (e.key == null)
                 return e.value;
@@ -468,15 +478,18 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * for the key.
      */
     final Entry<K,V> getEntry(Object key) {
-        if (size == 0) {
+        // 如果没有元素，则直接返回null
+    	if (size == 0) {
             return null;
         }
-
+        // 获取key的hash值
         int hash = (key == null) ? 0 : hash(key);
         for (Entry<K,V> e = table[indexFor(hash, table.length)];
              e != null;
              e = e.next) {
             Object k;
+            // 进行遍历
+	        // 当key的hash值相等&（key的引用或者内容相等）则直接返回对象
             if (e.hash == hash &&
                 ((k = e.key) == key || (key != null && key.equals(k))))
                 return e;
@@ -497,24 +510,35 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      *         previously associated <tt>null</tt> with <tt>key</tt>.)
      */
     public V put(K key, V value) {
-        if (table == EMPTY_TABLE) {
+        // 如果桶为空，则进行初始化
+	    // 从这里看出HashMap是懒加载
+    	if (table == EMPTY_TABLE) {
             inflateTable(threshold);
         }
+    	// 如果key为空，则直接存储在，桶的头部，第一个元素
         if (key == null)
             return putForNullKey(value);
+        // 获取hashCode
         int hash = hash(key);
+        // 计算桶的位置
         int i = indexFor(hash, table.length);
+        // 循环桶，判断是否有相同的元素，有，则覆盖其值
         for (Entry<K,V> e = table[i]; e != null; e = e.next) {
             Object k;
+            // hash引用相同&&（key的引用相同或者key的内容相同）
             if (e.hash == hash && ((k = e.key) == key || key.equals(k))) {
-                V oldValue = e.value;
-                e.value = value;
+            	V oldValue = e.value;
+                // 将其值替换为新的value
+            	e.value = value;
                 e.recordAccess(this);
+                // 返回旧的值
                 return oldValue;
             }
         }
 
+        // 修改次数增加
         modCount++;
+        // 将元素添加到桶中
         addEntry(hash, key, value, i);
         return null;
     }
@@ -523,7 +547,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * Offloaded version of put for null keys
      */
     private V putForNullKey(V value) {
-        for (Entry<K,V> e = table[0]; e != null; e = e.next) {
+        // 遍历一遍桶，只取第一个元素，如果key为null，则替换元素
+    	for (Entry<K,V> e = table[0]; e != null; e = e.next) {
             if (e.key == null) {
                 V oldValue = e.value;
                 e.value = value;
@@ -532,6 +557,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             }
         }
         modCount++;
+    	// 增加key为null的元素在第一个桶的位置
         addEntry(0, null, value, 0);
         return null;
     }
@@ -589,10 +615,13 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             threshold = Integer.MAX_VALUE;
             return;
         }
-
+        // 新创建一个桶
         Entry[] newTable = new Entry[newCapacity];
+        // 进行数据迁移
         transfer(newTable, initHashSeedAsNeeded(newCapacity));
+        // 扩容完成后，将新桶赋值给table即可
         table = newTable;
+        // 重新计算扩容阈值
         threshold = (int)Math.min(newCapacity * loadFactor, MAXIMUM_CAPACITY + 1);
     }
 
@@ -910,12 +939,15 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * Subclass overrides this to alter the behavior of put method.
      */
     void addEntry(int hash, K key, V value, int bucketIndex) {
-        if ((size >= threshold) && (null != table[bucketIndex])) {
-            resize(2 * table.length);
+        // 判断是否要扩容
+    	if ((size >= threshold) && (null != table[bucketIndex])) {
+            // 扩容为原来的2倍
+    		resize(2 * table.length);
             hash = (null != key) ? hash(key) : 0;
             bucketIndex = indexFor(hash, table.length);
         }
-
+        // 新增一个Entry
+	    // bucketIndex桶的位置
         createEntry(hash, key, value, bucketIndex);
     }
 
@@ -928,8 +960,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * clone, and readObject.
      */
     void createEntry(int hash, K key, V value, int bucketIndex) {
-        Entry<K,V> e = table[bucketIndex];
-        table[bucketIndex] = new Entry<>(hash, key, value, e);
+        // 取出桶第一个位置的元素
+    	Entry<K,V> e = table[bucketIndex];
+        // 将桶第一个位置的元素，替换为新元素，并将其他元素进行链化
+	    // 从这里也可以看出HashMap在hash冲突的时候，元素插入为头插法
+    	table[bucketIndex] = new Entry<>(hash, key, value, e);
         size++;
     }
 
