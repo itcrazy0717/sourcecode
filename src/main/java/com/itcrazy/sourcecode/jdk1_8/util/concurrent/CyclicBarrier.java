@@ -33,14 +33,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package com.itcrazy.sourcecode.util.concurrent;
+package com.itcrazy.sourcecode.jdk1_8.util.concurrent;
 
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Condition;
 
-import com.itcrazy.sourcecode.util.concurrent.locks.ReentrantLock;
+import com.itcrazy.sourcecode.jdk1_8.util.concurrent.locks.ReentrantLock;
 
 /**
  * A synchronization aid that allows a set of threads to all wait for

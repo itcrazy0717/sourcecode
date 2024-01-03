@@ -32,7 +32,7 @@
  * All rights reserved.
  */
 
-package com.itcrazy.sourcecode.util.concurrent;
+package com.itcrazy.sourcecode.jdk1_8.util.concurrent;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,7 +46,7 @@ import java.util.Objects;
 import java.util.RandomAccess;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import com.itcrazy.sourcecode.util.concurrent.locks.ReentrantLock ;
+import com.itcrazy.sourcecode.jdk1_8.util.concurrent.locks.ReentrantLock ;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;

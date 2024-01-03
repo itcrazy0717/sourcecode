@@ -33,7 +33,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package com.itcrazy.sourcecode.util.concurrent.locks;
+package com.itcrazy.sourcecode.jdk1_8.util.concurrent.locks;
 import java.util.concurrent.TimeUnit;
 import java.util.Collection;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;

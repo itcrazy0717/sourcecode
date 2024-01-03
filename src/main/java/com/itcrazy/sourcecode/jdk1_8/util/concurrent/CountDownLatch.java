@@ -33,10 +33,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package com.itcrazy.sourcecode.util.concurrent;
+package com.itcrazy.sourcecode.jdk1_8.util.concurrent;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
-import com.itcrazy.sourcecode.util.concurrent.locks.AbstractQueuedSynchronizer;
+import com.itcrazy.sourcecode.jdk1_8.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 /**
  * A synchronization aid that allows one or more threads to wait until

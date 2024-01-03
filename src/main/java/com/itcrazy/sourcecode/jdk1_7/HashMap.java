@@ -23,7 +23,7 @@
  *
  */
 
-package com.itcrazy.sourcecode.util.jdk1_7;
+package com.itcrazy.sourcecode.jdk1_7;
 import java.io.*;
 import java.util.AbstractCollection;
 import java.util.AbstractMap;
