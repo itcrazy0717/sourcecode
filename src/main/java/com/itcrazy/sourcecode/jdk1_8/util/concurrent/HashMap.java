@@ -359,6 +359,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     static final int hash(Object key) {
         int h;
         // 从这里可看出是允许key为null的
+	    // 此处的hash算法比较简单，直接使用key的hashCode与其hashCode高16位做异或操作
         return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
 
@@ -611,6 +612,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     return ((TreeNode<K,V>)first).getTreeNode(hash, key);
                 // 走到该分支，则表明当前节点下为链表结构，下面的循环就比较简单了，通过循环不断的查找相同的元素，有则返回，无则返回null
                 do {
+                	// hash值相同 &（key引用相同或者key的内容相同）
                     if (e.hash == hash &&
                         ((k = e.key) == key || (key != null && key.equals(k))))
                         return e;
@@ -937,6 +939,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 else {
                     // 否则顺着链表向下寻找，注意条件必须是hashCode相等，并且key也相同的元素
                     do {
+                    	// 遍历查找对应的key，和get方法类似
                         if (e.hash == hash &&
                             ((k = e.key) == key ||
                              (key != null && key.equals(k)))) {
@@ -958,6 +961,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     tab[index] = node.next;
                 // 否则将p.next赋值为node的next，从而实现截取，也就是删除了要寻找的key
                 else
+                	// 此处p在上面循环的时候已做改变，因此此处进行截取即可
                     p.next = node.next;
                 // 修改次数增加
                 ++modCount;
@@ -1548,6 +1552,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     abstract class HashIterator {
         Node<K,V> next;        // next entry to return
         Node<K,V> current;     // current entry
+        // 期望修改的次数
         int expectedModCount;  // for fast-fail
         int index;             // current slot
          
@@ -1573,7 +1578,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             Node<K,V>[] t;
             // 初始化是已经将next元素赋值为桶的第一个节点元素
             Node<K,V> e = next;
-            // fast-fail
+            // fail-fast
+	        // 在使用迭代器遍历的时候，如果使用非迭代器当方法对集合进行了操作，就会触发fail-fast
             if (modCount != expectedModCount)
                 throw new ConcurrentModificationException();
             if (e == null)
@@ -1594,6 +1600,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             current = null;
             K key = p.key;
             removeNode(hash(key), key, null, false, false);
+            // 注意此处，如果使用迭代器的remove方法是不会触发fail-fast，因此此处会重新进行赋值，保证modCount==expectedModCount
             expectedModCount = modCount;
         }
     }

@@ -1011,6 +1011,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             Object k = current.key;
             current = null;
             HashMap.this.removeEntryForKey(k);
+            // 此处重新赋值expectedModCount，保证不触发fail-fast
             expectedModCount = modCount;
         }
     }
