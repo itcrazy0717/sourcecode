@@ -114,7 +114,7 @@ public class TreeSet<E> extends AbstractSet<E>
     private transient NavigableMap<E,Object> m;
 
     // Dummy value to associate with an Object in the backing Map
-	// 固定value值，也就说TreeSet中的value是HashMap中的key
+	// 固定value值，也就说TreeSet中的value是TreeMap中的key
     private static final Object PRESENT = new Object();
 
     /**
