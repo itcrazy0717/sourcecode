@@ -106,10 +106,16 @@ public class HashSet<E>
 {
     static final long serialVersionUID = -5024744406713321676L;
 
-    // 内部其实通过HashMap来实现
+	/**
+	 * HashSet内部使用HashMap来实现，其中HashMap中的key就是HashSet中的元素，value固定为一个Object
+	 * 理解这里即可
+	 */
+
+	// 内部其实通过HashMap来实现
     private transient HashMap<E,Object> map;
 
     // Dummy value to associate with an Object in the backing Map
+	// 由于HashSet内部使用HashMap来实现，因此value固定，统一为Object对象
     private static final Object PRESENT = new Object();
 
     /**
