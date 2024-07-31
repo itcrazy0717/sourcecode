@@ -644,18 +644,20 @@ public class ThreadLocal<T> {
             // Rehash until we encounter null
             Entry e;
             int i;
-            // 继续循环，主要还是进行清理工作
+            // 继续循环，清除无效数据并且重新计算有效数据的下标
             for (i = nextIndex(staleSlot, len);
                  (e = tab[i]) != null;
                  i = nextIndex(i, len)) {
                 ThreadLocal<?> k = e.get();
-                if (k == null) {
+                // key为空，则直接将无效数据清除
+				if (k == null) {
                     e.value = null;
                     tab[i] = null;
                     size--;
                 } else {
                     int h = k.threadLocalHashCode & (len - 1);
-                    if (h != i) {
+                    // 数据下标发生变化，则将数据迁移到新的位置
+					if (h != i) {
                         tab[i] = null;
 
                         // Unlike Knuth 6.4 Algorithm R, we must scan until
