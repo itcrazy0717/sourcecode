@@ -38,6 +38,9 @@ package com.itcrazy.sourcecode.jdk1_8.util.concurrent;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -51,11 +54,10 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.*;
 
 /**
  * An {@link ExecutorService} that executes each submitted task using
@@ -495,6 +497,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Set containing all worker threads in pool. Accessed only when
      * holding mainLock.
      */
+    // 存储线程任务，也可以看出线程池底层其实就是一个HashSet
     private final HashSet<Worker> workers = new HashSet<Worker>();
 
     /**
