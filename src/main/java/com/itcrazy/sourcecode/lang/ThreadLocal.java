@@ -210,6 +210,7 @@ public class ThreadLocal<T> {
         // 获取当前线程
         Thread t = Thread.currentThread();
         // 获取ThreadLocalMap
+        // 与当前线程来绑定具体值，实现线程之间互不干扰
         ThreadLocalMap map = getMap(t);
         // 如果不为空，则设置其值
         if (map != null)
